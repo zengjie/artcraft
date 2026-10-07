@@ -26,6 +26,7 @@ import {
   useCanvas2dPageModelList,
   ClassyModelSelector,
   ModelPage,
+  useClassyModelSelectorStore,
   useSelectedImageModel,
   useSelectedProviderForModel,
 } from "@storyteller/ui-model-selector";
@@ -432,6 +433,16 @@ const PageDraw = ({
 
   const supportsMaskedInpainting =
     selectedImageModel?.usesInpaintingMask ?? false;
+  // The mask tool stays reachable when another model on this page accepts
+  // masks; picking the tool then switches to that model instead of dead-ending.
+  const maskCapableModel = useMemo(
+    () =>
+      canvas2dModelList
+        .map((item) => item.model as ImageModel | undefined)
+        .find((model) => model?.usesInpaintingMask),
+    [canvas2dModelList],
+  );
+  const setSelectedCanvasModel = useClassyModelSelectorStore((s) => s.setSelectedModel);
 
   // Keyboard tool switching mirrors the SideToolbar buttons; size up/down
   // adjusts whichever size the active tool draws with (brush, eraser, and the
@@ -454,9 +465,9 @@ const PageDraw = ({
   }, []);
 
   const handleMaskToolKey = useCallback(() => {
-    if (!supportsMaskedInpainting) return;
+    if (!supportsMaskedInpainting && !maskCapableModel) return;
     useSceneStore.getState().setActiveTool("inpaint");
-  }, [supportsMaskedInpainting]);
+  }, [supportsMaskedInpainting, maskCapableModel]);
 
   const adjustBrushSize = useCallback((direction: 1 | -1) => {
     const scene = useSceneStore.getState();
@@ -1007,11 +1018,15 @@ const PageDraw = ({
   }, [getAspectRatioDimensions]);
 
   useEffect(() => {
-    if (!supportsMaskedInpainting && activeTool === "inpaint") {
-      setActiveTool("select");
+    if (supportsMaskedInpainting || activeTool !== "inpaint") return;
+    if (maskCapableModel) {
+      setSelectedCanvasModel(PAGE_ID, maskCapableModel);
+      toast.success(`Switched to ${maskCapableModel.selectorName} for masked edits`);
+      return;
     }
+    setActiveTool("select");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTool, supportsMaskedInpainting]);
+  }, [activeTool, supportsMaskedInpainting, maskCapableModel]);
 
   useEffect(() => {
     if (!baseImageBitmap && !baseImageInfo?.isBlankCanvas) {
@@ -1299,7 +1314,7 @@ const PageDraw = ({
         onPaintBrush={handlePaintBrush}
         onCanvasBackground={handleCanvasBackground}
         onUploadImage={handleUploadImageClick}
-        supportsMaskTool={supportsMaskedInpainting}
+        supportsMaskTool={supportsMaskedInpainting || maskCapableModel !== undefined}
         activeToolId={activeTool}
         currentShape={currentShape}
       />
