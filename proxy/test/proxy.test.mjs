@@ -28,6 +28,7 @@ test('OAuth browser binding, one-time callback, device confirmation, session ver
   assert.equal(app.calls.length, 0);
   const approved = await app.get(callback, browserCookie);
   assert.equal(approved.status, 200);
+  assert.equal(approved.headers.get('referrer-policy'), 'strict-origin');
   const page = await approved.text();
   assert.ok(page.includes('Test User'));
   assert.ok(page.includes(challenge.confirmation_code.slice(0, 4)));
@@ -113,6 +114,7 @@ test('completed upstream errors become failed jobs', async t => {
 test('CORS allows native Rust origin and rejects unrelated websites', async t => {
   const app = await fixture(t);
   assert.equal((await fetch(`${app.base}/v1/omni_gen/models/image`, { headers: { origin: 'https://attacker.example' } })).status, 403);
+  assert.equal((await fetch(`${app.base}/auth/feishu/confirm`, { method: 'POST', headers: { origin: 'null' } })).status, 403);
   const r = await fetch(`${app.base}/v1/omni_gen/models/image`, { headers: { origin: 'https://desktop.getartcraft.com' } });
   assert.equal(r.status, 200);
   assert.deepEqual((await r.json()).providers.map(p => p.provider), ['artcraft']);

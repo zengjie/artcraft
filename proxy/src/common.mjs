@@ -34,6 +34,9 @@ export function json(res, value, status = 200) {
 }
 export function html(res, content, script = '') {
   const nonce = token();
+  // Native form POSTs send Origin: null under no-referrer. Keep the origin
+  // available for CSRF checks without disclosing OAuth query parameters.
+  res.setHeader('Referrer-Policy', 'strict-origin');
   res.setHeader('Content-Security-Policy', `default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'`);
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
   res.end(`<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>ArtCraft · 飞书登录</title><style>body{font:18px system-ui;background:#18191c;color:#eee;max-width:480px;margin:12vh auto;padding:24px}button{padding:12px 24px;background:#4787ff;color:white;border:0;border-radius:6px;font:inherit;cursor:pointer}code{font-size:28px}p{line-height:1.6}input{padding:12px;font:inherit}</style><h1>ArtCraft</h1>${content}${script ? `<script nonce="${nonce}">${script}</script>` : ''}</html>`);
