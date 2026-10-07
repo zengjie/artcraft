@@ -61,20 +61,22 @@ export const MODELS = [
     price: perMegatoken(1) },
   // Seedance 2.x lives under the bytedance/ namespace on fal and bills per
   // 1,000 tokens; stored here per million tokens to share the megatoken unit.
-  // 2.0 and 2.5 use the US-hosted edition the team account is entitled to; it
-  // applies a different content-compliance policy from the default edition.
-  { model: 'seedance_2p0', full_name: 'Seedance 2.0', modality: 'video', endpoint: 'bytedance/seedance-2.0/us', extra_info_short: 'US-hosted edition with native audio', ...baseVideo, ending_keyframe_supported: true, text_prompt_max_length: 5000,
+  // Seedance 2.0 uses the enterprise edition the team account is entitled to
+  // (bytedance/seedance-2.0/enterprise/v2/...): same parameters and list price
+  // as the public edition, different content-compliance checks. 2.5 has no
+  // enterprise edition yet.
+  { model: 'seedance_2p0', full_name: 'Seedance 2.0', modality: 'video', endpoint: 'bytedance/seedance-2.0/enterprise/v2', extra_info_short: 'Enterprise edition with native audio', ...baseVideo, ending_keyframe_supported: true, text_prompt_max_length: 5000,
     duration_seconds_options: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], duration_seconds_default: 5, duration_seconds_min: 4, duration_seconds_max: 15,
     aspect_ratio_options: ['wide_sixteen_by_nine', 'tall_nine_by_sixteen', 'square', 'wide_four_by_three', 'tall_three_by_four'], resolution_options: ['four_eighty_p', 'seven_twenty_p', 'ten_eighty_p'], resolution_default: 'seven_twenty_p',
-    image_references_supported: true, image_references_max: 9, show_generate_with_sound_toggle: true, price: perMegatoken(16.8) },
-  { model: 'seedance_2p0_fast', full_name: 'Seedance 2.0 Fast', modality: 'video', endpoint: 'bytedance/seedance-2.0/fast', ...baseVideo, ending_keyframe_supported: true, text_prompt_max_length: 5000,
+    image_references_supported: true, image_references_max: 9, show_generate_with_sound_toggle: true, price: perMegatoken(14) },
+  { model: 'seedance_2p0_fast', full_name: 'Seedance 2.0 Fast', modality: 'video', endpoint: 'bytedance/seedance-2.0/enterprise/v2/fast', extra_info_short: 'Enterprise edition, faster and cheaper', ...baseVideo, ending_keyframe_supported: true, text_prompt_max_length: 5000,
     duration_seconds_options: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], duration_seconds_default: 5, duration_seconds_min: 4, duration_seconds_max: 15,
     aspect_ratio_options: ['wide_sixteen_by_nine', 'tall_nine_by_sixteen', 'square', 'wide_four_by_three', 'tall_three_by_four'], resolution_options: ['four_eighty_p', 'seven_twenty_p'], resolution_default: 'seven_twenty_p',
     image_references_supported: true, image_references_max: 9, show_generate_with_sound_toggle: true, price: perMegatoken(11.2) },
-  { model: 'seedance_2p5', full_name: 'Seedance 2.5', modality: 'video', endpoint: 'bytedance/seedance-2.5/us', ...baseVideo, ending_keyframe_supported: true, text_prompt_max_length: 5000, extra_info_short: 'US-hosted edition, clips up to 30 seconds',
+  { model: 'seedance_2p5', full_name: 'Seedance 2.5', modality: 'video', endpoint: 'bytedance/seedance-2.5', ...baseVideo, ending_keyframe_supported: true, text_prompt_max_length: 5000, extra_info_short: 'Clips up to 30 seconds',
     duration_seconds_options: Array.from({ length: 27 }, (_, i) => i + 4), duration_seconds_default: 5, duration_seconds_min: 4, duration_seconds_max: 30,
     aspect_ratio_options: ['wide_sixteen_by_nine', 'tall_nine_by_sixteen', 'square', 'wide_four_by_three', 'tall_three_by_four'], resolution_options: ['four_eighty_p', 'seven_twenty_p', 'ten_eighty_p'], resolution_default: 'seven_twenty_p',
-    image_references_supported: true, image_references_max: 9, show_generate_with_sound_toggle: true, price: perMegatoken(25.68) },
+    image_references_supported: true, image_references_max: 9, show_generate_with_sound_toggle: true, price: perMegatoken(21.4) },
   { model: 'veo_3p1', full_name: 'Veo 3.1', modality: 'video', endpoint: 'fal-ai/veo3.1', ...baseVideo, text_prompt_max_length: 5000,
     duration_seconds_options: [4, 6, 8], duration_seconds_default: 8, duration_seconds_min: 4, duration_seconds_max: 8,
     aspect_ratio_options: ['wide_sixteen_by_nine', 'tall_nine_by_sixteen'], resolution_options: ['seven_twenty_p', 'ten_eighty_p'], resolution_default: 'seven_twenty_p',

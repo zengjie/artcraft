@@ -128,13 +128,13 @@ test('Seedance 1.5 Pro and 1.0 Lite map duration, resolution, audio and keyframe
 
 test('Seedance 2.x uses the bytedance namespace, reference-to-video and per-token pricing', () => {
   const text = buildInput('video', { model: 'seedance_2p5', prompt: 'waves', duration_seconds: 20, resolution: 'ten_eighty_p', generate_audio: true }, resolve);
-  assert.equal(text.endpoint, 'bytedance/seedance-2.5/us/text-to-video');
+  assert.equal(text.endpoint, 'bytedance/seedance-2.5/text-to-video');
   assert.deepEqual(text.input, { prompt: 'waves', duration: '20', resolution: '1080p', generate_audio: true, aspect_ratio: '16:9' });
   const refs = buildInput('video', { model: 'seedance_2p0', prompt: 'waves', reference_image_media_tokens: ['image', 'image'] }, resolve);
-  assert.equal(refs.endpoint, 'bytedance/seedance-2.0/us/reference-to-video');
+  assert.equal(refs.endpoint, 'bytedance/seedance-2.0/enterprise/v2/reference-to-video');
   assert.deepEqual(refs.input.image_urls, ['https://assets.example/image.png', 'https://assets.example/image.png']);
   const fast = buildInput('video', { model: 'seedance_2p0_fast', prompt: 'waves', image_media_token: 'image', end_frame_image_media_token: 'image' }, resolve);
-  assert.equal(fast.endpoint, 'bytedance/seedance-2.0/fast/image-to-video');
+  assert.equal(fast.endpoint, 'bytedance/seedance-2.0/enterprise/v2/fast/image-to-video');
   assert.equal(fast.input.end_image_url, 'https://assets.example/image.png');
   assert.throws(() => buildInput('video', { model: 'seedance_2p0_fast', prompt: 'waves', resolution: 'ten_eighty_p' }, resolve), /Unsupported resolution/);
   assert.throws(() => buildInput('video', { model: 'seedance_2p0', prompt: 'waves', reference_image_media_tokens: ['image'], image_media_token: 'image' }, resolve), /either a start frame/);
