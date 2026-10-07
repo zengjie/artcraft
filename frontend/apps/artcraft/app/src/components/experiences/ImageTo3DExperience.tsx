@@ -960,7 +960,7 @@ export const ImageTo3DExperience = ({
     const imageCountRow = (
       <div className="flex items-center justify-center gap-2 font-mono text-[11px] tabular-nums text-base-fg/40">
         <span>
-          {worldImages.length}/{MAX_WORLD_IMAGES} images
+          {worldImages.length}/{falWorldModel ? 1 : MAX_WORLD_IMAGES} {falWorldModel ? "image" : "images"}
         </span>
         <button
           type="button"

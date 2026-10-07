@@ -23,6 +23,7 @@ interface FalCostTagProps {
  */
 export function FalCostTag({ model, count, seconds, aspect, className }: FalCostTagProps) {
   const cap = useProxyModel(model);
+  const iconPath = getCreatorIconPath(ModelCreator.Fal);
   const estimate = estimateProxyCost(cap?.price, { count, seconds, megapixels: approximateMegapixels(aspect) });
   const label = estimate?.usd != null ? formatUsd(estimate.usd) : "metered";
   const headline = estimate?.usd != null ? `About ${formatUsd(estimate.usd)} at fal list price` : "Metered by fal";
@@ -40,9 +41,16 @@ export function FalCostTag({ model, count, seconds, aspect, className }: FalCost
     >
       <span
         data-testid="fal-cost"
-        className={twMerge("flex items-center gap-1.5 whitespace-nowrap text-[13px] font-semibold tabular-nums text-base-fg/80", className)}
+        // Inherits the surrounding text color so it reads on dark controls and
+        // on the white primary button alike; the mark is a currentColor mask.
+        className={twMerge("flex items-center gap-1.5 whitespace-nowrap text-[13px] font-semibold tabular-nums text-current opacity-80", className)}
       >
-        <img src={getCreatorIconPath(ModelCreator.Fal)} alt="fal" className="icon-auto-contrast h-3.5 w-3.5 opacity-80" />
+        <span
+          aria-hidden
+          className="h-3.5 w-3.5 shrink-0 bg-current"
+          style={{ WebkitMaskImage: `url(${iconPath})`, maskImage: `url(${iconPath})`, WebkitMaskSize: "contain", maskSize: "contain", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center" }}
+        />
+        <span className="sr-only">fal</span>
         {label}
       </span>
     </Tooltip>
