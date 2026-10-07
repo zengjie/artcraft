@@ -74,7 +74,7 @@ SQLX_OFFLINE=true cargo check -p artcraft --no-default-features --offline
 ./script/artcraft/build_fal_proxy_macos.sh
 ```
 
-最新本机 DMG 为 `../dist/ArtCraft-fal-Local-0.41.0-fal-pricing.dmg`（含 sha256）。本地包关闭官方 updater，使用独立 bundle identifier，避免被官方更新覆盖扩展。它是本机调试包，未做 Developer ID 公证，不作为正式企业分发成品。
+最新本机 DMG 为 `../dist/ArtCraft-fal-Local-0.41.0-service-mode.dmg`（含 sha256）。本地包关闭官方 updater，使用独立 bundle identifier，避免被官方更新覆盖扩展。它是本机调试包，未做 Developer ID 公证，不作为正式企业分发成品。
 
 ## 跟进上游
 
