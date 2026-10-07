@@ -13,6 +13,8 @@ npm start
 
 ## 桌面体验
 
+启动时在 ArtCraft 官方服务与 FAL（团队 fal 账号，界面统一显示为 FAL）之间二选一，之后只显示所选服务的模型、账号与费用；在 Settings → Accounts 可切换，切换后应用重载。ArtCraft 模式下界面与上游完全一致，fal 扩展不参与渲染；fal 模式下模型选择器只列 fal 托管模型，账号区只有飞书登录的团队 fal 账号。
+
 保留 ArtCraft 原版首页、创作页面、模型选择器、历史网格和编辑器。fal 是同一模型选择器中的服务商，已适配模型默认优先 fal；用户明确选择官方后保留该选择。官方登录、余额、订阅、升级入口仍使用官方服务。两边凭据独立，不互相转发；失败不会自动切到另一付费服务。
 
 在 Settings → Account 的 fal Proxy 区块使用飞书登录。桌面端 `ARTCRAFT_PROXY_URL` 默认 `http://localhost:12345`；前端构建使用 `VITE_FAL_PROXY=true`，Rust 使用 `fal-proxy` feature。macOS 本地构建入口为 `script/artcraft/build_fal_proxy_macos.sh`。
@@ -28,6 +30,8 @@ npm start
 | 蒙版修补     | FLUX Fill Pro                              | $0.05 每百万像素                    | 蒙版输入                                   |
 | 视频         | Kling 2.5 Turbo Pro                        | $0.07 每秒                          | 原版视频页面，文生/图生，已真实验收        |
 | 视频         | Kling 2.6 Pro / Veo 3.1 / Veo 3.1 Fast     | $0.07 / $0.40 / $0.15 每秒          | 原版视频页面；仅 schema 核对，未付费验收   |
+| 视频         | Seedance 1.5 Pro / 1.0 Lite                | $1.20 / $1.00 每百万 token          | 原版视频页面；1.0 Lite 已真实验收          |
+| 视频         | Seedance 2.0 (US) / 2.0 Fast / 2.5 (US)    | $16.8 / $11.2 / $25.68 每百万 token | 原版视频页面，支持首尾帧与多图参考；2.0 US 已真实验收 |
 | 视频提示词   | Video Prompt Generator                     | $0.001 每次                         | 视频提示框 Draft prompt 按钮               |
 | 音频         | Stable Audio Open / ElevenLabs Sound Effects | 按算力秒 / $0.002 每秒            | 原版音频页面；音效已真实验收               |
 | 3D 网格      | Hunyuan 3D 2.1 / V3 图生 / V3 文生          | $0.30 每次 / $0.015 每单位          | 原版 3D 选择器；V3 图生已真实验收          |
@@ -35,9 +39,9 @@ npm start
 | 物体 Splat   | TripoSplat                                 | $0.05 每次                          | 原版 3D 世界页，文案注明为物体 PLY         |
 | 世界资产包   | Hunyuan World                              | $0.30 每次                          | 原版 3D 世界页，标签表单，结果为 ZIP 下载  |
 
-“接入”不等于所有桌面操作均通过端到端验收，具体证据见验收文档。fal 未覆盖的模型继续走原有官方/第三方路线，不能将 Midjourney、Sora、World Labs 等宣称为 fal 等价实现。
+“接入”不等于所有桌面操作均通过端到端验收，具体证据见验收文档。fal 未覆盖的模型继续走原有官方/第三方路线，不能将 Midjourney、Sora、World Labs 等宣称为 fal 等价实现。Seedance 2.x 在 fal 上位于 `bytedance/` 命名空间（而非 `fal-ai/`），按 1,000 token 计价，这里折算为每百万 token。2.0 与 2.5 使用团队账号可用的 US 托管版本（`.../us/...`，合规审查策略与默认版不同）；2.0 Fast 没有 US 版本。官方通道未登录时界面会明确提示登录 ArtCraft。
 
-列价来自 fal 定价接口，由 `capabilities` 的 `price` 字段下发（`usd` 加 `unit`：image、megapixel、second、request、compute_second、unit）。桌面端据此在生成按钮和费用面板显示估算；按算力计费的模型只显示单价，不编造总额。最终以 fal 账单为准。
+列价来自 fal 定价接口，由 `capabilities` 的 `price` 字段下发（`usd` 加 `unit`：image、megapixel、second、request、compute_second、megatoken、unit）。桌面端据此在生成按钮和费用面板显示估算；按算力计费的模型只显示单价，不编造总额。最终以 fal 账单为准。
 
 模型清单位于 `src/models.mjs`，能力协议为 `/v1/proxy/capabilities`。客户端不能提交任意目标 URL；队列 URL 限制为 `https://queue.fal.run` 且禁止重定向。未知或不支持的非空参数明确报错。Nano Banana 的编辑器系统提示词为固定上下文前缀，不是官方的提示词增强服务。
 

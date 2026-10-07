@@ -4,19 +4,23 @@
 
 ## 产品约定
 
+同一时间只运行一种生成服务。首次启动出现服务选择：ArtCraft 官方服务，或飞书登录的团队 fal 账号；选择持久保存在本机，Settings → Accounts 的 Generation service 区块可切换，切换时应用重载。ArtCraft 模式下 fal 扩展完全不渲染，模型、账号、登录与商业入口与上游一致；fal 模式下模型选择器只列出 fal 托管模型（沿用上游同名模型的名称与描述），账号区只保留团队 fal 账号，官方登录弹窗不再出现，未连接飞书时由服务门禁引导登录。这样界面只呈现一套服务，也不把 fal 模型混入官方商业界面。
+
 沿用 ArtCraft 原版 UI。没有独立 fal 工作区。图片、视频、音频、3D 等使用原有页面、选择器、历史和编辑器回调；同一个模型可拥有官方与 fal 两套能力参数，选中服务商后使用对应参数。fal 已适配能力优先，用户明确选择官方后不强行覆盖。
 
 官方首页品牌、登录、余额、升级及订阅入口保留，官方 API host 不变。飞书登录放在原版 Account 设置及登录窗口中，只管理 Proxy 会话。不会伪造官方登录或将官方积分用于 fal；不会自动向另一服务商重试付费请求。LICENSE 原文未修改，沿用上游商业入口。
 
 ## fal 在界面中的呈现
 
-fal 元素沿用 ArtCraft 的粗野主义体系，不引入新色与新字体。费用沿用原版“图标加数字”的语法：ArtCraft 积分是硬币图标加积分数，fal 则是 fal 标志加美元列价，放在同一位置、同一字号。界面文案与上游一致使用英文句式，服务商显示名为 "fal (team)"，与上游自带的官方 "FAL" 通道区分。
+fal 元素沿用 ArtCraft 的粗野主义体系，不引入新色与新字体。费用沿用原版“图标加数字”的语法：ArtCraft 积分是硬币图标加积分数，fal 则是 fal 标志加美元列价，放在同一位置、同一字号。界面文案与上游一致使用英文句式，服务商与账号在界面上统一显示为 "FAL"；因为同一时间只运行一种服务，不会与上游自带的官方 FAL 通道同屏出现。
 
 - 生成按钮：`FalCostTag` 读取 Proxy capabilities 的 `price`，按数量、时长换算列价；按算力计费的模型显示 "metered"，悬停说明单价与计费归属。
 - 费用面板：fal 服务商下显示分辨率、时长、数量、单价与估算，并注明由团队 fal 账户结算、以 fal 账单为准。
-- 账户设置与登录弹窗：`fal team account` 区块与 ArtCraft、Grok、Midjourney 区块同构，飞书确认码以等宽数字展示。
-- 默认模型：页面在 fal 可用时优先选择上游默认模型的 fal 变体（图片页 Nano Banana Pro、视频页 Kling 2.5 Turbo Pro 等，见 `defaultModelForPage.ts`），用户显式选择后不再覆盖。
+- 账户设置与服务门禁：`FAL account` 区块与 ArtCraft、Grok、Midjourney 区块同构，飞书确认码以等宽数字展示。
+- 默认模型：fal 模式下页面优先选择上游默认模型的 fal 版本（图片页 Nano Banana Pro、视频页 Kling 2.5 Turbo Pro 等，见 `defaultModelForPage.ts`），用户显式选择后不再覆盖。
 - 3D 世界页：选中 TripoSplat 或 Hunyuan World 时副标题、按钮文案与说明随之变化，明示产物是物体 PLY 或 ZIP 包，不冒充 World Labs 世界。Hunyuan World 需要填写两层前景与场景类型，结果以可下载卡片呈现。
+- 未授权错误：ArtCraft 模式下未登录时生成失败不再显示原始 JSON，而是说明需要登录 ArtCraft 并打开登录弹窗；fal 模式下提示重新用飞书连接。两种模式都不会自动改走另一服务。
+- 全量 fal 目录快照见 `docs/research/fal-model-catalog-2026-10-07.md`（1459 个活跃端点，按类别列出，已接入端点有标注）。
 - 视频提示框：fal 服务商下提供 "Draft prompt" 按钮，用 fal 视频提示词生成器把短想法扩写为完整提示词，可一键撤销。
 
 ## 模块与维护边界
@@ -43,7 +47,7 @@ Nano Banana 编辑器系统提示词采用固定的画布/3D 场景上下文前�
 
 ## 验收记录
 
-2026-10-07 目录扩展后新增 5 项真实验收，全部成功并核对文件头：FLUX.1 Dev（JPEG）、Seedream 4 文生图（JPEG）、Nano Banana 2 图像编辑（PNG）、ElevenLabs 音效（MP3）、Hunyuan 3D V3 图生网格（GLB）。累计 API 预留 US$12.33，加桌面 Nano 单张 US$0.10、浏览器链路 Draft prompt US$0.01 与 Hunyuan World US$0.30，共 US$12.74。Kling 2.6 Pro、Veo 3.1、Veo 3.1 Fast、Seedream 4.5、Nano Banana Pro 仅完成 fal schema 与参数映射单元测试，未付费真实验收；Veo 单次 4 到 8 秒的列价为 US$0.60 到 US$3.20，默认不选中。
+2026-10-07 目录扩展后新增 5 项真实验收，全部成功并核对文件头：FLUX.1 Dev（JPEG）、Seedream 4 文生图（JPEG）、Nano Banana 2 图像编辑（PNG）、ElevenLabs 音效（MP3）、Hunyuan 3D V3 图生网格（GLB）。累计 API 预留 US$12.88，加桌面 Nano 单张 US$0.10、浏览器链路 Draft prompt US$0.01 与 Hunyuan World US$0.30，共 US$13.29。Seedance 1.0 Lite（2 秒 480p 文生视频）与 Seedance 2.0 US（4 秒 480p 无音频文生视频，验证团队账号对 US 托管版的访问权限）已真实验收；Seedance 2.5（US 托管版）、2.0 Fast（含首尾帧与最多 9 张参考图）、Seedance 1.5 Pro、Kling 2.6 Pro、Veo 3.1、Veo 3.1 Fast、Seedream 4.5、Nano Banana Pro 仅完成 fal schema 与参数映射单元测试，未付费真实验收；Veo 单次 4 到 8 秒的列价为 US$0.60 到 US$3.20，默认不选中。
 
 此前真实 fal API 验收 14/14 成功：FLUX 文生图、Nano 文生图/图像编辑、Qwen 角度、Fill 蒙版、Kling 文生/图生视频、Hunyuan 图生/文生网格、背景移除、音频、TripoSplat、Hunyuan World、视频提示词。13 个文件输出读取成功并核对 JPEG/PNG/MP4/GLB/WAV/PLY/ZIP 文件头，另一个返回文本。
 
