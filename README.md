@@ -4,6 +4,9 @@
 
 - [飞书登录配置](docs/feishu-login.md)
 - [Proxy 启动与支持范围](proxy/README.md)
+- [内部使用、许可证核对与扩展迁移路线](docs/research/internal-fal-proxy-roadmap.md)
+
+当前分支是功能原型，尚未覆盖全部 AIGC 工作流，也尚未完成官方服务与组织 Proxy 并存的迁移。内部发行前的整改与验收要求见上述研究文档。
 
 ---
 
