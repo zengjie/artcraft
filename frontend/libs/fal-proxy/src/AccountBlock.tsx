@@ -52,14 +52,14 @@ export function FalProxyAccountBlock() {
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em]">fal team account</p>
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em]">FAL account</p>
           <p className="truncate text-sm font-medium text-base-fg/80">
             {loggedIn ? session?.user?.display_name : "Not connected"}
           </p>
           <p className="text-xs leading-relaxed text-base-fg/55">
             {loggedIn
-              ? "Signed in with Feishu. Generations run on the team fal account and never use ArtCraft credits."
-              : "Sign in with Feishu to generate on the team fal account at list price."}
+              ? "Signed in with Feishu. Generations run on the FAL account and never use ArtCraft credits."
+              : "Sign in with Feishu to generate on FAL at list price."}
           </p>
         </div>
         <Button

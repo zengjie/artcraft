@@ -21,6 +21,7 @@ import { useAutoGrowEditorHeight } from "./useAutoGrowEditorHeight";
 import { PromptFullscreenModal, useFullscreenPrompt } from "./PromptFullscreenModal";
 import { PromptFullscreenButton } from "./PromptFullscreenButton";
 import { PromptClearAllButton } from "./PromptClearAllButton";
+import { reportEnqueueFailure } from "./reportEnqueueFailure";
 import { gtagEvent } from "@storyteller/google-analytics";
 import { twMerge } from "tailwind-merge";
 import { GenerationProvider } from "@storyteller/api-enums";
@@ -437,7 +438,7 @@ export const PromptBoxImage = ({
       await onEnqueuePressed?.(prompt, generationCount, subscriberId);
     } catch (err) {
       console.error("PromptBoxImage - enqueue failed", err);
-      toast.error(commandErrorMessage(err, "Failed to start image generation. Please try again."));
+      reportEnqueueFailure(err, "Failed to start image generation. Please try again.", selectedModel?.selectorName);
     } finally {
       setIsEnqueueing(false);
     }

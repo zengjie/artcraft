@@ -5,4 +5,6 @@ export * from "./jobs";
 export * from "./FalCostTag";
 export * from "./PromptDraftButton";
 export * from "./AccountBlock";
+export * from "./ServiceGate";
+export * from "./ServiceModeBlock";
 export * from "./api";

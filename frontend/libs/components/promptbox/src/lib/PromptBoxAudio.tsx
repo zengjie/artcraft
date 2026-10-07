@@ -8,6 +8,7 @@ import { PopoverMenu, PopoverItem } from "@storyteller/ui-popover";
 import { Tooltip } from "@storyteller/ui-tooltip";
 import { GenerateIconButton, ToggleButton } from "@storyteller/ui-button";
 import { FalCostTag, isProxyModel } from "@storyteller/fal-proxy";
+import { reportEnqueueFailure } from "./reportEnqueueFailure";
 import { ChevronDownIcon, ChevronUpIcon, MicIcon, MicOffIcon, RepeatIcon } from "lucide-react";
 import { DynamicIcon } from "@storyteller/icons";
 import type { OmniGenAudioModelDetails, OmniGenAudioRequest, OmniGenAudioGenerateResponse, UploadMediaFn } from "@storyteller/api";
@@ -419,7 +420,7 @@ export const PromptBoxAudio = ({
       await onEnqueuePressed?.(result.jobTokens);
     } catch (err) {
       console.error("PromptBoxAudio - enqueue failed", err);
-      toast.error("Failed to start audio generation. Please try again.");
+      reportEnqueueFailure(err, "Failed to start audio generation. Please try again.", selectedModel?.full_name ?? undefined);
     } finally {
       setIsEnqueueing(false);
     }

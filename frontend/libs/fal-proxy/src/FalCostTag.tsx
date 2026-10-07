@@ -26,8 +26,8 @@ export function FalCostTag({ model, count, seconds, aspect, className }: FalCost
   const iconPath = getCreatorIconPath(ModelCreator.Fal);
   const estimate = estimateProxyCost(cap?.price, { count, seconds, megapixels: approximateMegapixels(aspect) });
   const label = estimate?.usd != null ? formatUsd(estimate.usd) : "metered";
-  const headline = estimate?.usd != null ? `About ${formatUsd(estimate.usd)} at fal list price` : "Metered by fal";
-  const detail = estimate ? `${estimate.basis}. Team fal account, not ArtCraft credits.` : "No list price published. Team fal account, not ArtCraft credits.";
+  const headline = estimate?.usd != null ? `About ${formatUsd(estimate.usd)} at FAL list price` : "Metered by FAL";
+  const detail = estimate ? `${estimate.basis}. Billed to the FAL account, not ArtCraft credits.` : "No list price published. Billed to the FAL account, not ArtCraft credits.";
   return (
     <Tooltip
       position="top"

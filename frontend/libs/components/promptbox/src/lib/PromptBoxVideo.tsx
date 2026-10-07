@@ -59,6 +59,7 @@ import {
 } from "./PromptFullscreenModal";
 import { PromptFullscreenButton } from "./PromptFullscreenButton";
 import { PromptClearAllButton } from "./PromptClearAllButton";
+import { reportEnqueueFailure } from "./reportEnqueueFailure";
 import { FalCostTag, PromptDraftButton } from "@storyteller/fal-proxy";
 
 declare global {
@@ -1231,7 +1232,7 @@ export const PromptBoxVideo = ({
     const failure = outcomes.find((outcome) => outcome.status === "rejected");
     if (failure?.status === "rejected") {
       console.error("PromptBoxVideo - enqueue failed", failure.reason);
-      toast.error(commandErrorMessage(failure.reason, "Failed to start video generation. Please try again."));
+      reportEnqueueFailure(failure.reason, "Failed to start video generation. Please try again.", selectedModel?.selectorName);
     }
     if (acceptedIds.length) onEnqueuePressed?.(prompt, acceptedIds);
 

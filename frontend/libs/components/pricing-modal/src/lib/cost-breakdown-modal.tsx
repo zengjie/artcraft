@@ -467,6 +467,7 @@ function FalCostBreakdown({ model, count, seconds, resolution }: FalCostBreakdow
     second: "per second",
     request: "per generation",
     compute_second: "per compute second",
+    megatoken: "per million tokens",
     unit: "per unit",
   };
   return (
@@ -492,7 +493,7 @@ function FalCostBreakdown({ model, count, seconds, resolution }: FalCostBreakdow
         )}
         <div className="flex justify-between items-center">
           <span className="text-base-fg/60">Provider</span>
-          <span className="text-base-fg font-medium">fal (team)</span>
+          <span className="text-base-fg font-medium">FAL</span>
         </div>
         {estimate && (
           <div className="flex justify-between items-center">
@@ -514,11 +515,11 @@ function FalCostBreakdown({ model, count, seconds, resolution }: FalCostBreakdow
         </div>
         <p className="text-base-fg/60 leading-relaxed">
           {estimate?.usd != null
-            ? "Based on fal's published list price for this model. "
+            ? "Based on FAL's published list price for this model. "
             : estimate
-              ? "fal bills this model by actual usage, so the total is only known after the run. "
-              : "fal has not published a list price for this model. "}
-          Charged to the team fal account, not ArtCraft credits. The fal invoice is the final bill.
+              ? "FAL bills this model by actual usage, so the total is only known after the run. "
+              : "FAL has not published a list price for this model. "}
+          Charged to the FAL account, not ArtCraft credits. The FAL invoice is the final bill.
         </p>
       </div>
     </>

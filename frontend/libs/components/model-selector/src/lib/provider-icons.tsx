@@ -41,7 +41,7 @@ export const getProviderDisplayName = (provider: GenerationProvider): string => 
     case GenerationProvider.Artcraft:
       return "ArtCraft";
     case GenerationProvider.FalProxy:
-      return "fal (team)";
+      return "FAL";
     case GenerationProvider.Fal:
       return "FAL";
     case GenerationProvider.Grok:

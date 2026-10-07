@@ -7,6 +7,7 @@ const browser = await chromium.launch({ channel: 'chrome', headless: true });
 try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   await context.addInitScript(installBrowserFixture);
+  await context.addInitScript(() => { localStorage.setItem('artcraft.generationService', 'fal'); });
   await context.addInitScript(catalog => {
     const original = window.__TAURI_INTERNALS__.invoke;
     window.__PROXY_SUBMISSIONS__ = [];

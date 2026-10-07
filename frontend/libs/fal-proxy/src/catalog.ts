@@ -75,10 +75,13 @@ export async function mergeProxyCatalog(imageModels: ImageModel[], videoModels: 
     return new VideoModel({ ...m, providers: [GenerationProvider.FalProxy], supportsSystemPrompt: false,
       selectorName: official?.selectorName ?? m.selectorName, selectorDescription: official?.selectorDescription ?? m.selectorDescription });
   });
-  return { imageModels: merge(imageModels, proxyImages), videoModels: merge(videoModels, proxyVideos) };
+  // One service at a time: in fal mode the pickers list fal-hosted models only,
+  // keeping upstream presentation (names, descriptions) where the model exists there.
+  return { imageModels: proxyImages, videoModels: proxyVideos };
 }
 
-function merge<T extends ImageModel | VideoModel>(official: T[], proxy: T[]): T[] {
+// Retained for a future mixed mode; unused while one service is active at a time.
+export function mergeProviderVariants<T extends ImageModel | VideoModel>(official: T[], proxy: T[]): T[] {
   const merged = official.map(model => {
     const variant = proxy.find(p => p.tauriId === model.tauriId);
     if (!variant) return model;
@@ -126,19 +129,15 @@ export function extendProxy3DItems(items: any[], modality: "mesh" | "splat") {
     const proxy = new ModelClass({ id, tauriId: id, fullName: name, selectorName: name, selectorDescription: description,
       selectorBadges: badges ?? [], category: modality === "mesh" ? "3d_object" : "gaussian", creator: ModelCreator.Fal,
       providers: [GenerationProvider.FalProxy] });
-    if (source) {
-      const clone = Object.assign(Object.create(Object.getPrototypeOf(source.model)), source.model);
-      clone.registerProviderModel(GenerationProvider.FalProxy, proxy, true);
-      return { ...source, model: clone };
-    }
-    return { label: name, description, icon: getCreatorListIcon(ModelCreator.Fal), model: proxy, modelConfig: proxy.toLegacyModelConfig() };
+    // Keep the upstream row's icon when the model exists there; the fal variant is the only provider.
+    return { label: name, description, icon: source?.icon ?? getCreatorListIcon(ModelCreator.Fal), model: proxy, modelConfig: proxy.toLegacyModelConfig() };
   });
-  return [...extra, ...items.filter(item => !specs.some(({ id }) => item.model.tauriId === id))];
+  return extra;
 }
 
 export const backgroundRemovalModel = new ImageModel({
   id: "background_removal", tauriId: "fal_birefnet", fullName: "Background Removal", selectorName: "Background Removal",
   selectorDescription: "", selectorBadges: [], category: "image", creator: ModelCreator.Fal,
-  providers: enabled ? [GenerationProvider.FalProxy, GenerationProvider.Artcraft] : [GenerationProvider.Artcraft],
+  providers: enabled ? [GenerationProvider.FalProxy] : [GenerationProvider.Artcraft],
   maxGenerationCount: 1, defaultGenerationCount: 1,
 });

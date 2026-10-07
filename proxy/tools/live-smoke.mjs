@@ -85,6 +85,8 @@ await run('seedream-4-text', 'image', { model: 'seedream_4', prompt: 'A small wo
 await run('nano-2-edit', 'image', { model: 'nano_banana_2', prompt: 'Make the toy boat green. Preserve its shape.', image_media_tokens: [image], image_batch_count: 1, resolution: 'one_k' }, .09);
 await run('sfx', 'audio', { model: 'elevenlabs_sfx', prompt: 'Small wooden boat creaking gently on calm water', duration_seconds: 4 }, .03);
 await run('mesh-v3-image', 'mesh', { model: 'hunyuan_3d_3', image_media_tokens: [image], enable_texture: true }, .1);
+await run('seedance-lite-text', 'video', { model: 'seedance_1p0_lite', prompt: 'A red wooden toy boat drifting slowly on calm water, fixed camera', duration_seconds: 2, resolution: 'four_eighty_p', aspect_ratio: 'wide_sixteen_by_nine' }, .15);
+await run('seedance-2-us-text', 'video', { model: 'seedance_2p0', prompt: 'A red wooden toy boat drifting slowly on calm water, fixed camera, soft daylight', duration_seconds: 4, resolution: 'four_eighty_p', aspect_ratio: 'wide_sixteen_by_nine', generate_audio: false }, .4);
 console.log(`Smoke finished. Reserved maximum planning budget: $${Object.values(ledger.runs).reduce((sum, e) => sum + e.reservedUSD, 0).toFixed(2)}. This is not a billing statement.`);
 
 function maskPng(size) {

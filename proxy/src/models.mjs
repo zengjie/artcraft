@@ -5,7 +5,7 @@ const FLUX_SIZES = { wide: 'landscape_16_9', tall: 'portrait_16_9', square: 'squ
 // Seedream accepts explicit pixel sizes; keep the long edge at its 2K default.
 const SEEDREAM_SIZES = { square: [2048, 2048], wide: [2048, 1152], tall: [1152, 2048], wide_sixteen_by_nine: [2048, 1152], tall_nine_by_sixteen: [1152, 2048], wide_four_by_three: [2048, 1536], tall_three_by_four: [1536, 2048] };
 const IMAGE_RESOLUTIONS = { half_k: '0.5K', one_k: '1K', two_k: '2K', four_k: '4K' };
-const VIDEO_RESOLUTIONS = { seven_twenty_p: '720p', ten_eighty_p: '1080p' };
+const VIDEO_RESOLUTIONS = { four_eighty_p: '480p', seven_twenty_p: '720p', ten_eighty_p: '1080p' };
 
 // List prices read from the fal pricing API on 2026-10-07. They are reference
 // values for the UI; the final bill always comes from fal.
@@ -15,6 +15,7 @@ const perSecond = usd => ({ usd, unit: 'second' });
 const perRequest = usd => ({ usd, unit: 'request' });
 const perComputeSecond = usd => ({ usd, unit: 'compute_second' });
 const perUnit = usd => ({ usd, unit: 'unit' });
+const perMegatoken = usd => ({ usd, unit: 'megatoken' });
 
 const baseImage = {
   text_prompt_supported: true, text_prompt_max_length: 4000,
@@ -50,6 +51,30 @@ export const MODELS = [
   { model: 'seedream_4p5', full_name: 'Seedream 4.5', modality: 'image', endpoint: 'fal-ai/bytedance/seedream/v4.5', ...baseImage, image_refs_supported: true, image_refs_max: 6, price: perImage(0.04) },
   { model: 'kling_2p5_turbo_pro', full_name: 'Kling 2.5 Turbo Pro', modality: 'video', endpoint: 'fal-ai/kling-video/v2.5-turbo/pro', ...baseVideo, ending_keyframe_supported: true, price: perSecond(0.07) },
   { model: 'kling_2p6_pro', full_name: 'Kling 2.6 Pro', modality: 'video', endpoint: 'fal-ai/kling-video/v2.6/pro', ...baseVideo, ending_keyframe_supported: true, show_generate_with_sound_toggle: true, price: perSecond(0.07) },
+  { model: 'seedance_1p5_pro', full_name: 'Seedance 1.5 Pro', modality: 'video', endpoint: 'fal-ai/bytedance/seedance/v1.5/pro', ...baseVideo, ending_keyframe_supported: true,
+    duration_seconds_options: [4, 5, 6, 7, 8, 9, 10, 11, 12], duration_seconds_default: 5, duration_seconds_min: 4, duration_seconds_max: 12,
+    aspect_ratio_options: ['wide_sixteen_by_nine', 'tall_nine_by_sixteen', 'square', 'wide_four_by_three', 'tall_three_by_four'], resolution_options: ['four_eighty_p', 'seven_twenty_p', 'ten_eighty_p'], resolution_default: 'seven_twenty_p',
+    show_generate_with_sound_toggle: true, price: perMegatoken(1.2) },
+  { model: 'seedance_1p0_lite', full_name: 'Seedance 1.0 Lite', modality: 'video', endpoint: 'fal-ai/bytedance/seedance/v1/lite', ...baseVideo, ending_keyframe_supported: true,
+    duration_seconds_options: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], duration_seconds_default: 5, duration_seconds_min: 2, duration_seconds_max: 12,
+    aspect_ratio_options: ['wide_sixteen_by_nine', 'tall_nine_by_sixteen', 'square', 'wide_four_by_three', 'tall_three_by_four'], resolution_options: ['four_eighty_p', 'seven_twenty_p', 'ten_eighty_p'], resolution_default: 'seven_twenty_p',
+    price: perMegatoken(1) },
+  // Seedance 2.x lives under the bytedance/ namespace on fal and bills per
+  // 1,000 tokens; stored here per million tokens to share the megatoken unit.
+  // 2.0 and 2.5 use the US-hosted edition the team account is entitled to; it
+  // applies a different content-compliance policy from the default edition.
+  { model: 'seedance_2p0', full_name: 'Seedance 2.0', modality: 'video', endpoint: 'bytedance/seedance-2.0/us', extra_info_short: 'US-hosted edition with native audio', ...baseVideo, ending_keyframe_supported: true, text_prompt_max_length: 5000,
+    duration_seconds_options: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], duration_seconds_default: 5, duration_seconds_min: 4, duration_seconds_max: 15,
+    aspect_ratio_options: ['wide_sixteen_by_nine', 'tall_nine_by_sixteen', 'square', 'wide_four_by_three', 'tall_three_by_four'], resolution_options: ['four_eighty_p', 'seven_twenty_p', 'ten_eighty_p'], resolution_default: 'seven_twenty_p',
+    image_references_supported: true, image_references_max: 9, show_generate_with_sound_toggle: true, price: perMegatoken(16.8) },
+  { model: 'seedance_2p0_fast', full_name: 'Seedance 2.0 Fast', modality: 'video', endpoint: 'bytedance/seedance-2.0/fast', ...baseVideo, ending_keyframe_supported: true, text_prompt_max_length: 5000,
+    duration_seconds_options: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], duration_seconds_default: 5, duration_seconds_min: 4, duration_seconds_max: 15,
+    aspect_ratio_options: ['wide_sixteen_by_nine', 'tall_nine_by_sixteen', 'square', 'wide_four_by_three', 'tall_three_by_four'], resolution_options: ['four_eighty_p', 'seven_twenty_p'], resolution_default: 'seven_twenty_p',
+    image_references_supported: true, image_references_max: 9, show_generate_with_sound_toggle: true, price: perMegatoken(11.2) },
+  { model: 'seedance_2p5', full_name: 'Seedance 2.5', modality: 'video', endpoint: 'bytedance/seedance-2.5/us', ...baseVideo, ending_keyframe_supported: true, text_prompt_max_length: 5000, extra_info_short: 'US-hosted edition, clips up to 30 seconds',
+    duration_seconds_options: Array.from({ length: 27 }, (_, i) => i + 4), duration_seconds_default: 5, duration_seconds_min: 4, duration_seconds_max: 30,
+    aspect_ratio_options: ['wide_sixteen_by_nine', 'tall_nine_by_sixteen', 'square', 'wide_four_by_three', 'tall_three_by_four'], resolution_options: ['four_eighty_p', 'seven_twenty_p', 'ten_eighty_p'], resolution_default: 'seven_twenty_p',
+    image_references_supported: true, image_references_max: 9, show_generate_with_sound_toggle: true, price: perMegatoken(25.68) },
   { model: 'veo_3p1', full_name: 'Veo 3.1', modality: 'video', endpoint: 'fal-ai/veo3.1', ...baseVideo, text_prompt_max_length: 5000,
     duration_seconds_options: [4, 6, 8], duration_seconds_default: 8, duration_seconds_min: 4, duration_seconds_max: 8,
     aspect_ratio_options: ['wide_sixteen_by_nine', 'tall_nine_by_sixteen'], resolution_options: ['seven_twenty_p', 'ten_eighty_p'], resolution_default: 'seven_twenty_p',
@@ -137,9 +162,11 @@ export function buildInput(modality, request, resolve) {
     if ((request.video_batch_count ?? 1) !== 1) fail(400, 'Video batch count must be 1');
     const duration = request.duration_seconds ?? model.duration_seconds_default;
     if (!model.duration_seconds_options.includes(duration)) fail(400, `Duration must be one of ${model.duration_seconds_options.join(', ')} seconds`);
+    const referenceImages = model.image_references_supported ? (request.reference_image_media_tokens ?? []) : [];
     for (const field of ['reference_image_media_tokens', 'reference_video_media_tokens', 'reference_audio_media_tokens', 'reference_character_tokens']) {
-      if (request[field]?.length) fail(400, `${field} is unsupported by this model`);
+      if (request[field]?.length && !(field === 'reference_image_media_tokens' && model.image_references_supported)) fail(400, `${field} is unsupported by this model`);
     }
+    if (referenceImages.length > (model.image_references_max ?? 0)) fail(400, `This model accepts at most ${model.image_references_max} reference images`);
     if (request.generate_audio === true && !model.show_generate_with_sound_toggle) fail(400, 'This model does not generate audio');
     const start = request.start_frame_image_media_token ?? request.image_media_token;
     const end = request.end_frame_image_media_token;
@@ -147,7 +174,24 @@ export function buildInput(modality, request, resolve) {
     if (end && !model.ending_keyframe_supported) fail(400, 'This model does not accept an end frame');
     input = { prompt };
     if (request.negative_prompt) input.negative_prompt = request.negative_prompt;
-    if (model.model.startsWith('veo_')) {
+    if (model.model.startsWith('seedance_')) {
+      input.duration = String(duration);
+      if (resolution) input.resolution = resolution;
+      if (model.show_generate_with_sound_toggle) input.generate_audio = request.generate_audio === true;
+      if (referenceImages.length) {
+        if (start) fail(400, 'Use either a start frame or reference images, not both');
+        endpoint += '/reference-to-video';
+        input.image_urls = referenceImages.map(t => resolve(t, 'image'));
+        input.aspect_ratio = ratio;
+      } else {
+        endpoint += start ? '/image-to-video' : '/text-to-video';
+        if (start) {
+          input.image_url = resolve(start, 'image');
+          if (end) input.end_image_url = resolve(end, 'image');
+          input.aspect_ratio = 'auto';
+        } else input.aspect_ratio = ratio;
+      }
+    } else if (model.model.startsWith('veo_')) {
       input.duration = `${duration}s`;
       input.generate_audio = request.generate_audio === true;
       if (resolution) input.resolution = resolution;
@@ -229,6 +273,11 @@ function validateParameters(model, request) {
     hunyuan_3d_v3_text: [...refs, 'enable_texture'],
     kling_2p5_turbo_pro: video,
     kling_2p6_pro: video,
+    seedance_2p0: [...video, 'resolution'],
+    seedance_2p0_fast: [...video, 'resolution'],
+    seedance_2p5: [...video, 'resolution'],
+    seedance_1p5_pro: [...video, 'resolution'],
+    seedance_1p0_lite: [...video, 'resolution'],
     veo_3p1: [...video, 'resolution'],
     veo_3p1_fast: [...video, 'resolution'],
   }[model.model] || [];

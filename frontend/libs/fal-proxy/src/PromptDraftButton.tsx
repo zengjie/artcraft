@@ -65,7 +65,7 @@ export function PromptDraftButton({ concept, imageToken, onDraft, className }: P
         content={
           <div className="flex max-w-[240px] flex-col gap-1 text-left font-sans normal-case tracking-normal">
             <span className="text-sm font-medium text-base-fg">Draft a full prompt from your idea</span>
-            <span className="text-xs text-base-fg/70">fal's video prompt generator expands a short concept into a shot description you can edit.{price ? ` About ${price} per draft.` : ""}</span>
+            <span className="text-xs text-base-fg/70">FAL's video prompt generator expands a short concept into a shot description you can edit.{price ? ` About ${price} per draft.` : ""}</span>
           </div>
         }
       >
@@ -73,7 +73,7 @@ export function PromptDraftButton({ concept, imageToken, onDraft, className }: P
           type="button"
           onClick={draft}
           disabled={!ready}
-          aria-label="Draft a full prompt with fal"
+          aria-label="Draft a full prompt with FAL"
           className="flex h-7 items-center gap-1.5 border border-ui-controls-border bg-ui-controls px-2.5 text-xs font-medium text-base-fg/80 transition-colors hover:bg-ui-controls/70 hover:text-base-fg disabled:cursor-not-allowed disabled:opacity-40"
         >
           {busy ? <LoaderCircleIcon className="h-3.5 w-3.5 animate-spin" /> : <PenLineIcon className="h-3.5 w-3.5" />}

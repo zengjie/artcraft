@@ -3,7 +3,7 @@
 // shows credits. Figures are estimates against list price; the team's fal
 // invoice is the only bill.
 
-export type ProxyPriceUnit = "image" | "megapixel" | "second" | "request" | "compute_second" | "unit";
+export type ProxyPriceUnit = "image" | "megapixel" | "second" | "request" | "compute_second" | "megatoken" | "unit";
 
 export interface ProxyPrice { usd: number; unit: ProxyPriceUnit }
 
@@ -32,6 +32,7 @@ const UNIT_LABEL: Record<ProxyPriceUnit, string> = {
   second: "second of output",
   request: "generation",
   compute_second: "compute second",
+  megatoken: "million tokens",
   unit: "unit",
 };
 

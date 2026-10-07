@@ -42,10 +42,10 @@ export function installProxyApi() {
     // Official session, balance, subscription, upgrades and public browsing
     // never enter this adapter.
     if (method === "GET" && p === "/v1/omni_gen/models/audio") {
-      const a = await original().catch(() => ({ models: [], providers: [] }));
+      // fal mode lists fal audio models only; the official listing is not requested.
       const catalog = await proxyCall<{ models: any[] }>("capabilities");
       const audio = catalog.models.filter(m => m.modality === "audio");
-      return { ...a, success: true, models: [...audio, ...(a.models ?? [])], providers: [...(a.providers ?? []), { provider: "fal_proxy", models: audio.map(m => ({ model: m.model })) }] };
+      return { success: true, models: audio, providers: [{ provider: "fal_proxy", models: audio.map(m => ({ model: m.model })) }] };
     }
     const session = useProxySession.getState().session;
     if (!session?.logged_in) return original();

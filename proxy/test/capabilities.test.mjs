@@ -70,7 +70,7 @@ test('Splat, world and prompt models keep distinct input and output semantics', 
 });
 
 test('every model advertises a fal list price with a known unit', () => {
-  const units = new Set(['image', 'megapixel', 'second', 'request', 'compute_second', 'unit']);
+  const units = new Set(['image', 'megapixel', 'second', 'request', 'compute_second', 'megatoken', 'unit']);
   for (const model of capabilities().models) {
     assert.ok(model.price && model.price.usd > 0 && units.has(model.price.unit), model.model);
   }
@@ -112,4 +112,32 @@ test('Hunyuan 3D V3 image and ElevenLabs sound effects use their own fields', ()
   assert.deepEqual(buildInput('audio', { model: 'elevenlabs_sfx', prompt: 'door creak', duration_seconds: 3 }, resolve).input, { text: 'door creak', duration_seconds: 3 });
   assert.throws(() => buildInput('audio', { model: 'elevenlabs_sfx', prompt: 'door creak', duration_seconds: 60 }, resolve), /0.5–22/);
   assert.throws(() => buildInput('audio', { model: 'stable_audio', prompt: 'rain', duration_seconds: 3 }, resolve), /Unsupported parameter/);
+});
+
+test('Seedance 1.5 Pro and 1.0 Lite map duration, resolution, audio and keyframes to the fal endpoints', () => {
+  const pro = buildInput('video', { model: 'seedance_1p5_pro', prompt: 'waves', duration_seconds: 8, resolution: 'ten_eighty_p', generate_audio: true, start_frame_image_media_token: 'image', end_frame_image_media_token: 'image' }, resolve);
+  assert.equal(pro.endpoint, 'fal-ai/bytedance/seedance/v1.5/pro/image-to-video');
+  assert.deepEqual(pro.input, { prompt: 'waves', duration: '8', resolution: '1080p', generate_audio: true, image_url: 'https://assets.example/image.png', end_image_url: 'https://assets.example/image.png', aspect_ratio: 'auto' });
+  const lite = buildInput('video', { model: 'seedance_1p0_lite', prompt: 'waves', duration_seconds: 3, aspect_ratio: 'wide_four_by_three' }, resolve);
+  assert.equal(lite.endpoint, 'fal-ai/bytedance/seedance/v1/lite/text-to-video');
+  assert.deepEqual(lite.input, { prompt: 'waves', duration: '3', resolution: '720p', aspect_ratio: '4:3' });
+  assert.throws(() => buildInput('video', { model: 'seedance_1p0_lite', prompt: 'waves', generate_audio: true }, resolve), /does not generate audio/);
+  assert.throws(() => buildInput('video', { model: 'seedance_1p5_pro', prompt: 'waves', duration_seconds: 3 }, resolve), /Duration must be one of/);
+  assert.throws(() => buildInput('video', { model: 'seedance_1p5_pro', prompt: 'waves', reference_image_media_tokens: ['image'] }, resolve), /unsupported/);
+});
+
+test('Seedance 2.x uses the bytedance namespace, reference-to-video and per-token pricing', () => {
+  const text = buildInput('video', { model: 'seedance_2p5', prompt: 'waves', duration_seconds: 20, resolution: 'ten_eighty_p', generate_audio: true }, resolve);
+  assert.equal(text.endpoint, 'bytedance/seedance-2.5/us/text-to-video');
+  assert.deepEqual(text.input, { prompt: 'waves', duration: '20', resolution: '1080p', generate_audio: true, aspect_ratio: '16:9' });
+  const refs = buildInput('video', { model: 'seedance_2p0', prompt: 'waves', reference_image_media_tokens: ['image', 'image'] }, resolve);
+  assert.equal(refs.endpoint, 'bytedance/seedance-2.0/us/reference-to-video');
+  assert.deepEqual(refs.input.image_urls, ['https://assets.example/image.png', 'https://assets.example/image.png']);
+  const fast = buildInput('video', { model: 'seedance_2p0_fast', prompt: 'waves', image_media_token: 'image', end_frame_image_media_token: 'image' }, resolve);
+  assert.equal(fast.endpoint, 'bytedance/seedance-2.0/fast/image-to-video');
+  assert.equal(fast.input.end_image_url, 'https://assets.example/image.png');
+  assert.throws(() => buildInput('video', { model: 'seedance_2p0_fast', prompt: 'waves', resolution: 'ten_eighty_p' }, resolve), /Unsupported resolution/);
+  assert.throws(() => buildInput('video', { model: 'seedance_2p0', prompt: 'waves', reference_image_media_tokens: ['image'], image_media_token: 'image' }, resolve), /either a start frame/);
+  assert.throws(() => buildInput('video', { model: 'seedance_2p5', prompt: 'waves', duration_seconds: 31 }, resolve), /Duration must be one of/);
+  assert.equal(MODEL('seedance_2p5').price.unit, 'megatoken');
 });
