@@ -9,6 +9,7 @@ interface GenerateIconButtonProps extends Omit<
   "children"
 > {
   credits?: number | null;
+  costLabel?: string;
   loading?: boolean;
 }
 
@@ -19,6 +20,7 @@ interface GenerateIconButtonProps extends Omit<
  */
 export const GenerateIconButton = ({
   credits,
+  costLabel,
   loading,
   className,
   disabled,
@@ -28,7 +30,8 @@ export const GenerateIconButton = ({
 
   return (
     <div className={twMerge("flex shrink-0 items-center gap-2.5", className)}>
-      {credits != null && (
+      {costLabel && <span className="text-[13px] text-base-fg/80" title="由团队 fal 账户按实际用量计费">{costLabel}</span>}
+      {!costLabel && credits != null && (
         <Tooltip
           content={`${credits} credit${credits !== 1 ? "s" : ""} cost`}
           position="top"

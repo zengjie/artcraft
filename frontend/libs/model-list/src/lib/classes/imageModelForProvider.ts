@@ -7,6 +7,7 @@ export function imageModelForProvider(
   model: ImageModel | undefined,
   provider: GenerationProvider | undefined,
 ): ImageModel | undefined {
+  model = model?.forProvider(provider);
   if (!model || provider !== GenerationProvider.Midjourney) return model;
   if (!["midjourney", "midjourney_7", "midjourney_7_niji", "midjourney_8"].includes(model.tauriId)) return model;
   return new ImageModel({

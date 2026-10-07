@@ -10,6 +10,7 @@ const GENERATION_PROVIDER_TO_CREATOR: Partial<Record<GenerationProvider, ModelCr
   [GenerationProvider.Sora]: ModelCreator.OpenAi,
   [GenerationProvider.WorldLabs]: ModelCreator.WorldLabs,
   [GenerationProvider.Fal]: ModelCreator.Fal,
+  [GenerationProvider.FalProxy]: ModelCreator.Fal,
   [GenerationProvider.Higgsfield]: ModelCreator.Higgsfield,
   [GenerationProvider.Krea]: ModelCreator.Krea,
   [GenerationProvider.Openart]: ModelCreator.OpenArt,
@@ -39,6 +40,8 @@ export const getProviderDisplayName = (provider: GenerationProvider): string => 
   switch (provider) {
     case GenerationProvider.Artcraft:
       return "ArtCraft";
+    case GenerationProvider.FalProxy:
+      return "fal Proxy";
     case GenerationProvider.Fal:
       return "FAL";
     case GenerationProvider.Grok:

@@ -19,6 +19,10 @@ impl SerializeMarker for EstimateImageCostResponse {}
 
 #[tauri::command]
 pub async fn estimate_image_cost_command(request: OmniRequest, app: AppHandle) -> OmniResult {
+  #[cfg(feature = "fal-proxy")]
+  if request.provider == Some(enums::common::generation_provider::GenerationProvider::FalProxy) {
+    return crate::fal_proxy_integration::estimate(request, Modality::Image, &app).await;
+  }
   if matches!(request.provider, Some(GenerationProvider::Midjourney)) {
     if !matches!(request.model(), Some("midjourney" | "midjourney_7" | "midjourney_7_niji" | "midjourney_8")) {
       return Err(CommandErrorResponseWrapper {

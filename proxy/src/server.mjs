@@ -6,6 +6,7 @@ import { Store } from './store.mjs';
 import { Auth } from './auth.mjs';
 import { Media } from './media.mjs';
 import { Generation } from './generation.mjs';
+import { capabilities } from './capabilities.mjs';
 import { listing } from './models.mjs';
 import { fail, json, jsonBody } from './common.mjs';
 
@@ -19,7 +20,8 @@ export function loadConfig(env = process.env) {
     feishuAppId: env.FEISHU_APP_ID || '', feishuAppSecret: env.FEISHU_APP_SECRET || '',
     allowedTenants: (env.FEISHU_ALLOWED_TENANTS || '').split(',').map(s => s.trim()).filter(Boolean),
     allowedOrigins: (env.ALLOWED_ORIGINS || 'tauri://localhost,https://tauri.localhost,http://tauri.localhost,http://localhost:5173,https://artcraft.localhost,https://desktop.getartcraft.com,http://localhost').split(','),
-    maxActiveJobs: Number(env.MAX_ACTIVE_JOBS_PER_USER || 5),
+    maxActiveJobs: positiveInteger(env.MAX_ACTIVE_JOBS_PER_USER, 5),
+    maxDailyJobs: positiveInteger(env.MAX_DAILY_JOBS_PER_USER, 100),
   };
 }
 
@@ -54,7 +56,8 @@ export function createProxy(config, { store = new Store(join(config.dataDir, 'pr
       rate.set(bucket, limit);
       if (path === '/healthz' && req.method === 'GET') return json(res, { ok: true });
       if (await auth.route(req, res, url)) return;
-      if (req.method === 'GET' && /^\/v1\/omni_gen\/models\/(image|video|audio|mesh|splat)$/.test(path)) return json(res, listing(path.split('/').at(-1)));
+      if (path === '/v1/proxy/capabilities' && req.method === 'GET') return json(res, capabilities());
+      if (req.method === 'GET' && /^\/v1\/omni_gen\/models\/(image|video|audio|mesh|splat|world|text)$/.test(path)) return json(res, listing(path.split('/').at(-1)));
       // Opaque media/asset tokens are capability URLs, matching the native
       // client's anonymous media-detail fetches. Lists remain session-scoped.
       if (req.method === 'GET' && /^\/assets\/[A-Za-z0-9_-]{43}$/.test(path)) {
@@ -73,7 +76,7 @@ export function createProxy(config, { store = new Store(join(config.dataDir, 'pr
       }
       const session = auth.require(req);
       const owner = session.user.user_token;
-      if (req.method === 'POST' && /^\/v1\/omni_gen\/generate\/(image|video|audio|mesh|splat)$/.test(path)) {
+      if (req.method === 'POST' && /^\/v1\/omni_gen\/generate\/(image|video|audio|mesh|splat|world|text)$/.test(path)) {
         return json(res, await generation.submit(owner, path.split('/').at(-1), await jsonBody(req)));
       }
       if (req.method === 'POST' && path.startsWith('/v1/omni_gen/cost/')) {
@@ -126,6 +129,10 @@ export function createProxy(config, { store = new Store(join(config.dataDir, 'pr
         else if (!/^\/v1\/media_files\/(list|search_session|mesh\/list|splat\/list|list\/user\/[^/]+)$/.test(path)) fail(404, 'Unsupported media operation');
         const kind = path.includes('/mesh/') ? 'mesh' : path.includes('/splat/') ? 'splat' : url.searchParams.get('media_class') || url.searchParams.get('filter_media_class');
         if (kind) items = items.filter(m => m.media_class === kind);
+        const kinds = url.searchParams.get('filter_media_classes')?.split(',');
+        if (kinds?.length) items = items.filter(m => kinds.includes(m.media_class));
+        if (url.searchParams.get('include_user_uploads') === 'false') items = items.filter(m => !m.is_user_upload);
+        items.sort((a, b) => b.created_at.localeCompare(a.created_at));
         const page = Math.max(0, Number(url.searchParams.get('page_index')) || 0), size = Math.min(100, Math.max(1, Number(url.searchParams.get('page_size')) || 50));
         const results = items.slice(page * size, (page + 1) * size);
         return json(res, { success: true, results, media_files: results, pagination: { current_page: page, total_page_count: Math.ceil(items.length / size), page_size: size, total_count: items.length, has_next_page: (page + 1) * size < items.length } });
@@ -156,4 +163,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   const { server, store } = createProxy(config);
   server.listen(config.port, config.host, () => console.info(`ArtCraft fal Proxy listening at ${config.origin}`));
   for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => server.close(() => { store.close(); process.exit(0); }));
+}
+
+function positiveInteger(value, fallback) {
+  const number = value == null || value === '' ? fallback : Number(value);
+  if (!Number.isSafeInteger(number) || number < 1) throw new Error('Job limits must be positive integers');
+  return number;
 }

@@ -1,3 +1,4 @@
+import { withApiExtension } from "./ApiExtensions";
 // import { bool } from "@techstark/opencv-js";
 import { StorytellerApiHostStore } from "./config/StorytellerApiHostStore.js";
 import { API_TARGETS } from "./enums/Api.js";
@@ -118,6 +119,7 @@ export class ApiManager {
 
     const bodyInString = JSON.stringify(body);
 
+    return withApiExtension({ url: new URL(endpointWithQueries), method, body }, async () => {
     const response = await fetch(endpointWithQueries, {
       method,
       headers: buildSessionHeaders({
@@ -146,6 +148,7 @@ export class ApiManager {
     }
 
     return response.json();
+    });
   }
 
   public async fetchMultipartFormData<T>(
@@ -158,6 +161,7 @@ export class ApiManager {
       body: FormData;
     },
   ): Promise<T> {
+    return withApiExtension({ url: new URL(endpoint), method, body }, async () => {
     const response = await fetch(endpoint, {
       method,
       headers: buildSessionHeaders({
@@ -167,6 +171,7 @@ export class ApiManager {
       body: body,
     });
     return response.json();
+    });
   }
 
   protected get<T>({

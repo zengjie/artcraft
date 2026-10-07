@@ -141,7 +141,7 @@ export const PromptBoxAudio = ({
       if (chosen) return chosen;
     }
     return (
-      models.find((m) => m.model === DEFAULT_AUDIO_MODEL_ID) ?? models[0]
+      models.find((m) => m.model === "stable_audio") ?? models.find((m) => m.model === DEFAULT_AUDIO_MODEL_ID) ?? models[0]
     );
   }, [models, selectedModelId]);
 
@@ -604,6 +604,7 @@ export const PromptBoxAudio = ({
                 confirmClear={hasAttachedRefs}
               />
               <GenerateIconButton
+                costLabel={selectedModel?.model === "stable_audio" ? "fal · 按用量计费" : undefined}
                 onClick={handleEnqueue}
                 disabled={!prompt.trim() || missingRequiredAudioRef}
                 loading={isEnqueueing}

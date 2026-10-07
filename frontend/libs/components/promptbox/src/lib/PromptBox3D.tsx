@@ -122,7 +122,7 @@ export const PromptBox3D = ({
   handleCameraFocalLengthChange,
   onAspectRatioSelect,
   setEnginePrompt,
-  selectedImageModel,
+  selectedImageModel: catalogImageModel,
   selectedProvider,
   snapshotCurrentFrame,
   credits,
@@ -134,6 +134,7 @@ export const PromptBox3D = ({
   onAddTimeline,
   showAddTimelineButton = true,
 }: PromptBox3DProps) => {
+  const selectedImageModel = catalogImageModel?.forProvider(selectedProvider);
   //const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [content, setContent] = useState<React.ReactNode>(null);
@@ -488,7 +489,7 @@ export const PromptBox3D = ({
           prompt: prompt,
           batch_size: 1,
           aspect_ratio: aspectRatio,
-          resolution: getCurrentResolution(),
+          resolution: selectedImageModel?.canChangeResolution ? getCurrentResolution() : undefined,
         };
 
         if (!!selectedProvider) {
@@ -885,6 +886,7 @@ export const PromptBox3D = ({
                 Save frame
               </Button>
               <GenerateButton
+                costLabel={selectedProvider === GenerationProvider.FalProxy ? "fal · 按用量计费" : undefined}
                 className="flex items-center border-none bg-white px-3 text-sm font-bold text-black hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50"
                 icon={undefined}
                 onClick={handleEnqueue}

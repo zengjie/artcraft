@@ -1,3 +1,4 @@
+import { FalProxyAccountBlock, enabled } from "@storyteller/fal-proxy";
 import { ArtcraftAccountBlock } from "./ArtcraftAccountBlock";
 import { MidjourneyAccountBlock } from "./MidjourneyAccountBlock";
 import { GrokAccountBlock } from "./GrokAccountBlock";
@@ -11,6 +12,7 @@ export const AccountSettingsPane = ({
 }: AccountSettingsPaneProps) => {
   return (
     <div className="flex flex-col gap-5 pt-3 text-base-fg">
+      {enabled && <><FalProxyAccountBlock /><hr className="border-ui-panel-border" /></>}
       <ArtcraftAccountBlock
         globalAccountLogoutCallback={globalAccountLogoutCallback}
       />

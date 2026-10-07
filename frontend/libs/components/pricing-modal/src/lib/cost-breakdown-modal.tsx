@@ -354,7 +354,12 @@ export function CostBreakdownModal({ activeTabId }: CostBreakdownModalProps) {
           </div>
         )}
 
-        {hasCostData ? (
+        {selectedProvider === "fal_proxy" ? (
+          <div className="bg-ui-sunken rounded-none p-3 border border-ui-panel-border space-y-2">
+            <p className="font-medium">fal · 按用量计费</p>
+            <p className="text-base-fg/60">由团队 fal 账户结算，不消耗 ArtCraft 积分。当前没有可靠的实时金额预估，请以 fal 账单为准。</p>
+          </div>
+        ) : hasCostData ? (
           <>
             {/* Generation Details */}
             <div className="space-y-1.5">

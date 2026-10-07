@@ -94,13 +94,27 @@ pub async fn get_task_queue_command(
     &task_database,
   ).await;
 
-  let tasks = match result {
+  let mut tasks = match result {
     Ok(items) => items,
     Err(err) => {
       error!("get_task_queue_command failed: {:?}", err);
       return Err("get_task_queue_command failed".into())
     }
   };
+
+  #[cfg(feature = "fal-proxy")]
+  if tasks.iter().any(|task| task.provider == Some(GenerationProvider::FalProxy)) {
+    use sqlite_tasks::queries::list_tasks_by_provider_and_tokens::{list_tasks_by_provider_and_tokens, ListTasksArgs};
+    use tauri::Manager;
+    let proxy = app.state::<fal_proxy_provider::ProxyProvider>();
+    let session = proxy.execute("session", serde_json::json!({})).await.unwrap_or_default();
+    let owner = session["user"]["user_token"].as_str();
+    let owned = list_tasks_by_provider_and_tokens(ListTasksArgs { db: task_database.get_connection(), provider: GenerationProvider::FalProxy, provider_job_ids: None }).await;
+    let visible: std::collections::HashSet<String> = owned.ok().into_iter().flat_map(|list| list.tasks).filter(|task|
+      owner.is_some() && task.queue_status_url.as_deref() == Some(proxy.origin()) && task.queue_response_url.as_deref() == owner
+    ).map(|task| task.id.to_string()).collect();
+    tasks.retain(|task| task.provider != Some(GenerationProvider::FalProxy) || visible.contains(task.id.as_str()));
+  }
 
   Ok(GetTaskQueueCommandResponse{
     tasks,

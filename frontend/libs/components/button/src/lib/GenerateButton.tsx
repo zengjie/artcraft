@@ -5,10 +5,12 @@ import { Tooltip } from "@storyteller/ui-tooltip";
 
 interface GenerateButtonProps extends ButtonProps {
   credits?: number | null;
+  costLabel?: string;
 }
 
 export const GenerateButton = ({
   credits,
+  costLabel,
   children,
   className,
   disabled,
@@ -25,7 +27,8 @@ export const GenerateButton = ({
     >
       <span className="truncate">{children}</span>
 
-      {credits != null && (
+      {costLabel && <span className="text-xs opacity-80">{costLabel}</span>}
+      {!costLabel && credits != null && (
         <Tooltip
           content={`${credits} credit${credits !== 1 ? "s" : ""} cost`}
           position="top"

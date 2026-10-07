@@ -26,8 +26,8 @@ import { useDesktopUsername } from "~/components/generation-feed/useDesktopUsern
 import { DesktopCreatePageShell } from "~/components/generation-feed/DesktopCreatePageShell";
 import { DesktopGenerationGallery } from "~/components/generation-feed/DesktopGenerationGallery";
 
-const generateAudio = async (request: OmniGenAudioRequest) => (await GenerateAudio(request)).payload;
-const estimateAudio = async (request: OmniGenAudioRequest) => (await EstimateAudioCost(request)).payload;
+const generateAudio = async (request: OmniGenAudioRequest) => (await GenerateAudio({ ...request, provider: request.model === "stable_audio" ? "fal_proxy" : undefined } as any)).payload;
+const estimateAudio = async (request: OmniGenAudioRequest) => (await EstimateAudioCost({ ...request, provider: request.model === "stable_audio" ? "fal_proxy" : undefined } as any)).payload;
 
 const AUDIO_FILTER = [FilterMediaClasses.AUDIO];
 
@@ -44,6 +44,7 @@ const CreateAudio = () => {
   const selectedModel = useMemo(
     () =>
       models.find((m) => m.model === selectedModelId) ??
+      models.find((m) => m.model === "stable_audio") ??
       models.find((m) => m.model === "suno_music") ??
       models[0],
     [models, selectedModelId],

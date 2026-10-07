@@ -42,7 +42,7 @@ export function useVideoCostEstimate(
       return;
     }
 
-    const videoModel = selectedModel as VideoModel;
+    const videoModel = (selectedModel as VideoModel).forProvider(selectedProvider as GenerationProvider);
     const commonAspectRatio = videoModel.supportsCommonAspectRatio
       ? videoAspectRatioToCommonAspectRatio(aspectRatio, videoModel.sizeOptions)
         ?? videoModel.defaultAspectRatio ?? videoModel.sizeOptions[0]?.tauriValue

@@ -206,6 +206,9 @@
       ],
       "@storyteller/tauri-utils": [
         "libs/tauri-utils/src/index.ts"
+      ],
+      "@storyteller/fal-proxy": [
+        "libs/fal-proxy/src/index.ts"
       ]
     }
   }

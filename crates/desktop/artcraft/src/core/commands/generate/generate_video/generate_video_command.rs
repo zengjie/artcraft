@@ -32,6 +32,12 @@ use tauri::{AppHandle, State};
 
 #[tauri::command]
 pub async fn generate_video_command(request: OmniRequest, app: AppHandle) -> OmniResult {
+  #[cfg(feature = "fal-proxy")]
+  let request = crate::fal_proxy_integration::prepare_references(request, &app).await?;
+  #[cfg(feature = "fal-proxy")]
+  if request.provider == Some(enums::common::generation_provider::GenerationProvider::FalProxy) {
+    return crate::fal_proxy_integration::generate(request, Modality::Video, &app).await;
+  }
   if request.uses_artcraft() {
     return omni::generate(request, Modality::Video, &app).await;
   }

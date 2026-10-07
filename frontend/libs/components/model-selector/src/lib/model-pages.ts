@@ -6,5 +6,6 @@ export enum ModelPage {
   ImageEditor = "image-editor",
   ImageTo3DWorld = "image-to-3d-world",
   ImageTo3DObject = "image-to-3d-object",
+  BackgroundRemoval = "background-removal",
   Angles = "angles",
 }

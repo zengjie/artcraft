@@ -13,7 +13,7 @@ use errors::AnyhowResult;
 use log::{error, info, warn};
 use serde_derive::{Deserialize, Serialize};
 use artcraft_client::endpoints::media_files::delete_media_file::delete_media_file;
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, State, Manager};
 use tokens::tokens::media_files::MediaFileToken;
 
 #[derive(Deserialize)]
@@ -64,6 +64,12 @@ pub async fn handle_request(
   storyteller_creds_manager: &StorytellerCredentialManager,
 ) -> AnyhowResult<()> {
 
+  #[cfg(feature = "fal-proxy")]
+  if app.state::<fal_proxy_provider::ProxyProvider>().knows_media(request.media_file_token.as_str()).await {
+    app.state::<fal_proxy_provider::ProxyProvider>().execute("delete_media", serde_json::json!({"token": request.media_file_token.as_str()})).await.map_err(|error| anyhow::anyhow!(error))?;
+    MediaFileDeletedEvent { media_file_token: request.media_file_token }.send_infallible(app);
+    return Ok(());
+  }
   let creds = storyteller_creds_manager.get_credentials()?;
 
   let _result = delete_media_file(

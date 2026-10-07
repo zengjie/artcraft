@@ -580,6 +580,7 @@ export const PromptBoxImage = ({
                 confirmClear={referenceImages.length > 0}
               />
               <GenerateIconButton
+                costLabel={selectedProvider === GenerationProvider.FalProxy ? "fal · 按用量计费" : undefined}
                 onClick={handleEnqueue}
                 disabled={!prompt.trim()}
                 loading={isEnqueueing}

@@ -25,8 +25,13 @@ use log::{error, info};
 use tauri::{AppHandle, State};
 
 #[tauri::command]
-pub async fn generate_image_command(mut request: OmniRequest, app: AppHandle) -> OmniResult {
-  request.provider = Some(GenerationProvider::Artcraft);
+pub async fn generate_image_command(request: OmniRequest, app: AppHandle) -> OmniResult {
+  #[cfg(feature = "fal-proxy")]
+  let request = crate::fal_proxy_integration::prepare_references(request, &app).await?;
+  #[cfg(feature = "fal-proxy")]
+  if request.provider == Some(enums::common::generation_provider::GenerationProvider::FalProxy) {
+    return crate::fal_proxy_integration::generate(request, Modality::Image, &app).await;
+  }
   if request.uses_artcraft() && !request.uses_legacy_image_endpoint() {
     return omni::generate(request, Modality::Image, &app).await;
   }

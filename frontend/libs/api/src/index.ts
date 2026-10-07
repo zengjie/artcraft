@@ -32,3 +32,5 @@ export * from "./lib/models/Folder.js";
 export * from "./lib/config/StorytellerApiHostStore.js";
 export * from "./lib/enums/EIntermediateFile.js";
 export { HttpApiError } from "./lib/ApiManager.js";
+
+export { registerApiExtension } from "./lib/ApiExtensions";

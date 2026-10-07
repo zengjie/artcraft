@@ -1,6 +1,5 @@
-import { ApiManager, ApiResponse, buildSessionHeaders } from "./ApiManager.js";
+import { ApiManager, ApiResponse } from "./ApiManager.js";
 import { Prompts } from "./models/Prompts.js";
-import { FetchProxy as fetch } from "@storyteller/tauri-utils";
 
 export class PromptsApi extends ApiManager {
   public async pollJobSession(
@@ -143,16 +142,7 @@ export class PromptsApi extends ApiManager {
     const uuidIdempotencyToken = crypto.randomUUID();
     formData.append("uuid_idempotency_token", uuidIdempotencyToken);
 
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: buildSessionHeaders({
-        Accept: "application/json",
-      }),
-      credentials: "include",
-      body: formData,
-    });
-
-    const postResponse = await response.json();
+    const postResponse = await this.fetchMultipartFormData<{ success: boolean; snapshot_media_token?: string }>(endpoint, { method: "POST", body: formData });
 
     console.log(postResponse);
 

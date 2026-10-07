@@ -8,10 +8,8 @@
 // implementation differs between hosts.
 
 import React, {
-  useCallback,
   useContext,
   useEffect,
-  useMemo,
   useRef,
 } from "react";
 import {
@@ -22,16 +20,8 @@ import {
 import {
   useStage3dPageModelList,
   ModelPage,
-  defaultModelForPage,
-  useClassyModelSelectorStore,
-  useSelectedImageModel,
-  useSelectedProviderForModel,
   ClassyModelSelector,
 } from "@storyteller/ui-model-selector";
-import { PopoverMenu } from "@storyteller/ui-popover";
-import { Tooltip } from "@storyteller/ui-tooltip";
-import type { ImageModel } from "@storyteller/model-list";
-import type { GenerationProvider } from "@storyteller/api-enums";
 import { HelpMenuButton } from "@storyteller/ui-help-menu";
 import {
   CostCalculatorButton,
@@ -159,73 +149,9 @@ export const Stage3DBody = ({
     };
   }, []);
 
-  const selectedImageModel: ImageModel | undefined =
-    useSelectedImageModel(PAGE_ID);
-
-  const selectedProvider: GenerationProvider | undefined =
-    useSelectedProviderForModel(PAGE_ID, selectedImageModel?.id);
-
-  // Inline (prompt-box) model selector. Built here rather than in
-  // PromptBox3D so the promptbox lib doesn't take a new dep on
-  // model-selector; the selector is just plumbed in as a ReactNode slot.
-  const setSelectedModel = useClassyModelSelectorStore(
-    (s) => s.setSelectedModel,
-  );
-
-  // Seed the default model on mount when we're the only model picker
-  // on the page. ClassyModelSelector does this itself on mount, but in
-  // the prompt-box placement we don't render it — so without this
-  // effect the store stays empty and the trigger has no icon until the
-  // user opens the popover and picks a model manually.
-  useEffect(() => {
-    if (modelSelectorPlacement !== "prompt-box") return;
-    if (selectedImageModel) return;
-    const models = stage3dModelList.map((i) => i.model).filter(
-      (m): m is NonNullable<typeof m> => m !== undefined,
-    );
-    const def = defaultModelForPage(models, PAGE_ID);
-    if (def) setSelectedModel(PAGE_ID, def);
-  }, [
-    modelSelectorPlacement,
-    selectedImageModel,
-    setSelectedModel,
-    stage3dModelList,
-  ]);
-
-  const inlineModelItems: PopoverItem[] = useMemo(
-    () =>
-      stage3dModelList.map((item) => ({
-        ...item,
-        selected: item.model === selectedImageModel,
-      })),
-    [selectedImageModel, stage3dModelList],
-  );
-  const handleInlineModelSelect = useCallback(
-    (item: PopoverItem) => {
-      if (item.model) setSelectedModel(PAGE_ID, item.model);
-    },
-    [setSelectedModel],
-  );
-  const selectedModelIcon = useMemo(
-    () =>
-      stage3dModelList.find((i) => i.model === selectedImageModel)
-        ?.icon,
-    [selectedImageModel, stage3dModelList],
-  );
-  const inlineModelSelector =
-    modelSelectorPlacement === "prompt-box" ? (
-      <Tooltip content="Model" position="top" className="z-50" closeOnClick>
-        <PopoverMenu
-          items={inlineModelItems}
-          onSelect={handleInlineModelSelect}
-          mode="toggle"
-          panelTitle="Select Model"
-          panelClassName="min-w-[260px]"
-          showIconsInList
-          triggerIcon={selectedModelIcon}
-        />
-      </Tooltip>
-    ) : undefined;
+  const inlineModelSelector = modelSelectorPlacement === "prompt-box" ? (
+    <ClassyModelSelector variant="embedded" items={stage3dModelList} page={PAGE_ID} />
+  ) : undefined;
 
   const imageCredits = useCostBreakdownModalStore(
     (s) => s.estimatedCreditsByPage[PAGE_ID],

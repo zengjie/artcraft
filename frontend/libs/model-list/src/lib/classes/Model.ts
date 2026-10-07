@@ -88,7 +88,24 @@ export class Model {
     this.maxPromptLength = args.maxPromptLength ?? 3000;
   }
 
+  private providerModels = new Map<GenerationProvider, Model>();
+  private preferredProvider?: GenerationProvider;
+
+  registerProviderModel(provider: GenerationProvider, model: Model, preferred = false) {
+    this.providerModels = new Map(this.providerModels).set(provider, model);
+    if (preferred) this.preferredProvider = provider;
+  }
+
+  forProvider(provider?: GenerationProvider): this {
+    return (provider && this.providerModels.get(provider) || this) as this;
+  }
+
+  getPreferredProvider(): GenerationProvider | undefined { return this.preferredProvider; }
+
   getProviders(): GenerationProvider[] {
+    if (this.providerModels.size) {
+      return [...new Set([...(this.preferredProvider ? [this.preferredProvider] : []), ...(this.providers ?? [GenerationProvider.Artcraft]), ...this.providerModels.keys()])];
+    }
     return this.providers ?? [GenerationProvider.Artcraft];
   }
 

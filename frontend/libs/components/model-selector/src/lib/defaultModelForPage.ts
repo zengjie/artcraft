@@ -20,6 +20,8 @@ export const defaultModelForPage = (
   models: Model[],
   page: ModelPage,
 ): Model => {
+  const preferred = models.find(model => model.getPreferredProvider() || model.getProviders()[0] === "fal_proxy");
+  if (preferred) return preferred;
   const defaultId = DEFAULT_MODEL_ID_FOR_PAGE[page];
 
   if (defaultId) {

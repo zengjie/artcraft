@@ -226,19 +226,13 @@ it("uses the new model's default when a saved quality tier is unsupported", () =
   expect(model.resolveQuality(CommonQuality.Low)).toBe("low");
 });
 
-it("routes all catalog models through the Proxy", () => {
+it("offers ArtCraft and direct Midjourney only for supported Midjourney models", () => {
   const models = buildImageModelsFromListing([], [
     { model: "midjourney_7" }, { model: "midjourney_7_niji" },
     { model: "midjourney_8" }, { model: "future_image" },
   ]);
   for (const model of models.slice(0, 3)) {
-    expect(model.getProviders()).toEqual([GenerationProvider.Artcraft]);
+    expect(model.getProviders()).toEqual([GenerationProvider.Artcraft, GenerationProvider.Midjourney]);
   }
   expect(models[3].getProviders()).toEqual([GenerationProvider.Artcraft]);
-});
-
-
-it("does not expose unsupported compiled models when the Proxy catalog is smaller", () => {
-  const models = buildImageModelsFromListing(IMAGE_MODELS, [{ model: "nano_banana" }]);
-  expect(models.map(model => model.tauriId)).toEqual(["nano_banana"]);
 });

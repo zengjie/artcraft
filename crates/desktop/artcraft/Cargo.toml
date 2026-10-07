@@ -21,7 +21,12 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 [build-dependencies]
 tauri-build = { version = "2.6.2", features = [] }
 
+[features]
+default = ["fal-proxy"]
+fal-proxy = ["dep:fal_proxy_provider"]
+
 [dependencies]
+fal_proxy_provider = { path = "../../../extensions/fal-proxy/native", optional = true }
 toml.workspace = true
 browser_emulation.workspace = true
 cookie_store_wrapper = { workspace = true, features = ["wreq"] }

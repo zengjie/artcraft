@@ -5,6 +5,7 @@ use serde::Serialize;
 pub enum GenerationServiceProvider {
   Artcraft,
   Fal,
+  FalProxy,
   Grok,
   Midjourney,
   Sora,

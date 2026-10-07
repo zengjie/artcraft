@@ -271,6 +271,7 @@ fn task_type_to_generation_action(task_type: TaskType) -> GenerationAction {
 
 fn provider_to_generation_service(provider: GenerationProvider) -> GenerationServiceProvider {
   match provider {
+    GenerationProvider::FalProxy => GenerationServiceProvider::FalProxy,
     GenerationProvider::Artcraft => GenerationServiceProvider::Artcraft,
     GenerationProvider::Fal => GenerationServiceProvider::Fal,
     GenerationProvider::Grok => GenerationServiceProvider::Grok,

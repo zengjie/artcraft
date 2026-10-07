@@ -200,6 +200,7 @@ dependencies = [
  "enums",
  "errors",
  "fal_client",
+ "fal_proxy_provider",
  "filesys",
  "futures",
  "grok_consumer_client",
@@ -2014,6 +2015,16 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "url",
+]
+
+[[package]]
+name = "fal_proxy_provider"
+version = "0.1.0"
+dependencies = [
+ "reqwest 0.12.23",
+ "serde",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]

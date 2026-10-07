@@ -1,3 +1,4 @@
+import { FalProxyAccountBlock, useProxySession, installProxyApi } from "@storyteller/fal-proxy";
 // Top-level shell for the artcraft app. Always-mounted chrome
 // (TopBar, login + pricing modals, toaster, Tauri event listeners,
 // background refresh hooks) lives here, and a single tab-driven
@@ -159,6 +160,7 @@ export const MainApp = ({ sceneToken }: Props) => {
     });
   }, []);
 
+  const proxySession = useProxySession(s => s.session);
   const { triggerRecheck } = useLoginModalStore();
   const { isOpen: isCreditsOpen, closeModal: closeCreditsModal } =
     useCreditsModalStore();
@@ -177,6 +179,8 @@ export const MainApp = ({ sceneToken }: Props) => {
         pageName="Edit Scene"
       />
       <LoginModal
+        additionalLogin={<FalProxyAccountBlock />}
+        hasAdditionalSession={proxySession?.logged_in}
         videoSrc2D="/resources/videos/artcraft-canvas-demo.mp4"
         videoSrc3D="/resources/videos/artcraft-3d-demo.mp4"
         onOpenChange={(isOpen: boolean) => {
@@ -191,6 +195,7 @@ export const MainApp = ({ sceneToken }: Props) => {
           authentication.userInfo.value = userInfo;
         }}
       />
+
 
       <Suspense
         fallback={
@@ -391,3 +396,6 @@ const PageDrawWithGalleryDrop = () => {
   }, []);
   return <PageDraw />;
 };
+
+// Register once at shell module initialization, before gallery requests.
+installProxyApi();

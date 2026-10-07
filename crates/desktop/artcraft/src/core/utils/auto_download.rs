@@ -40,8 +40,13 @@ pub async fn auto_download_task(
     return Ok(());
   }
   let urls = if let Some(batch) = maybe_batch_token {
-    let config = app.state::<AppEnvConfigs>();
+    let config = app.state::<AppEnvConfigs>().inner().clone();
     let credentials = app.state::<StorytellerCredentialManager>().get_credentials()?;
+    #[cfg(feature = "fal-proxy")]
+    let (config, credentials) = if task.provider == enums::common::generation_provider::GenerationProvider::FalProxy {
+      let (config, creds) = crate::fal_proxy_integration::context(app).await.map_err(|error| anyhow!(error))?;
+      (config, Some(creds))
+    } else { (config, credentials) };
     let result = tokio::time::timeout(
       Duration::from_secs(60),
       list_batch_generated_redux_media_files(&config.storyteller_host, credentials.as_ref(), batch),

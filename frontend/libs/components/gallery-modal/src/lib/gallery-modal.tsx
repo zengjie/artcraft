@@ -1,3 +1,4 @@
+import { useProxySession } from "@storyteller/fal-proxy";
 import { Modal } from "@storyteller/ui-modal";
 import { LightboxModal } from "@storyteller/ui-lightbox-modal";
 import { Button } from "@storyteller/ui-button";
@@ -123,7 +124,8 @@ async function fetchCurrentUsername(): Promise<string | null> {
   } catch {
     // ignore
   }
-  return null;
+  const proxy = useProxySession.getState().session;
+  return proxy?.logged_in ? proxy.user?.username ?? null : null;
 }
 
 // ─── Skeleton loader component ────────────────────────────────────────────────

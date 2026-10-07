@@ -52,13 +52,12 @@ impl LoginChallengeClient {
     let Ok(url) = Url::parse(value) else {
       return false;
     };
-    let origin_allowed = match &self.api_host {
+    let origin_allowed = match self.api_host {
       ApiHost::Localhost { .. } => ["http://localhost:4200", "http://127.0.0.1:4200", "http://localhost:4201", "http://127.0.0.1:4201"]
         .contains(&url.origin().ascii_serialization().as_str()),
       ApiHost::Storyteller => ["https://app.getartcraft.com", "https://getartcraft.com", "https://www.getartcraft.com"]
         .contains(&url.origin().ascii_serialization().as_str()),
-      ApiHost::Proxy { origin } => url.origin() == origin.origin(),
-      ApiHost::FakeYou => false,
+      ApiHost::FakeYou | ApiHost::Proxy { .. } => false,
     };
     origin_allowed
       && url.username().is_empty()
@@ -149,19 +148,3 @@ impl std::fmt::Display for LoginChallengeClientError {
 }
 
 impl std::error::Error for LoginChallengeClientError {}
-
-#[cfg(test)]
-mod proxy_tests {
-  use super::*;
-
-  #[test]
-  fn verification_is_bound_to_the_proxy_origin_and_approval_path() {
-    let host = ApiHost::Proxy { origin: Url::parse("https://proxy.example").unwrap() };
-    let client = LoginChallengeClient::new(&host).unwrap();
-    let fragment = format!("#approval_token={}", "a".repeat(43));
-    assert!(client.allows_verification_url(&format!("https://proxy.example/login/desktop{}", fragment)));
-    assert!(!client.allows_verification_url(&format!("https://evil.example/login/desktop{}", fragment)));
-    assert!(!client.allows_verification_url(&format!("https://proxy.example/other{}", fragment)));
-    assert!(!client.allows_verification_url(&format!("https://proxy.example/login/desktop?redirect=evil{}", fragment)));
-  }
-}

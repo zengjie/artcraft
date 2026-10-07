@@ -24,7 +24,7 @@ export const AuthButtons = ({
               loginSignUpPressed();
             }}
           >
-            使用飞书登录
+            Login / Sign Up
           </button>
         </div>
       </>

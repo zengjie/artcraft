@@ -133,7 +133,7 @@ fn command_error(status: CommandErrorStatus, kind: &str, message: String) -> Com
   CommandErrorResponseWrapper { status, error_type: Some(kind.into()), error_message: Some(message), error_details: None }
 }
 
-async fn resolve_image_inputs(fields: &mut Map<String, Value>, maybe_creds: Option<&StorytellerCredentialSet>, host: &ApiHost) -> Result<(), CommandErrorResponseWrapper<String, ()>> {
+pub(crate) async fn resolve_image_inputs(fields: &mut Map<String, Value>, maybe_creds: Option<&StorytellerCredentialSet>, host: &ApiHost) -> Result<(), CommandErrorResponseWrapper<String, ()>> {
   let mut refs = Vec::new();
   for name in ["canvas_image", "scene_image", "inpainting_mask_image"] {
     let token_key = format!("{}_media_token", name);
@@ -158,7 +158,7 @@ async fn resolve_image_inputs(fields: &mut Map<String, Value>, maybe_creds: Opti
   Ok(())
 }
 
-fn job_tokens(response: &Value) -> Vec<String> {
+pub(crate) fn job_tokens(response: &Value) -> Vec<String> {
   let mut result = Vec::new();
   if let Some(primary) = response.get("inference_job_token").and_then(Value::as_str) {
     result.push(primary.to_owned());

@@ -1,3 +1,4 @@
+import { enabled, getUploadProvider } from "@storyteller/fal-proxy";
 import { invoke } from "@tauri-apps/api/core";
 import { CommandResult } from "../common/CommandStatus";
 
@@ -45,6 +46,17 @@ export interface EnqueueImageBgRemovalSuccess extends CommandResult {
 export type EnqueueImageBgRemovalResult = EnqueueImageBgRemovalSuccess | EnqueueImageBgRemovalError;
 
 export const EnqueueImageBgRemoval = async (request: EnqueueImageBgRemovalRequest) : Promise<EnqueueImageBgRemovalResult> => {
+  if (enabled && getUploadProvider() === "fal_proxy") {
+    const raw = request.base64_image?.split(",").at(-1);
+    const bytes = raw ? Array.from(atob(raw), char => char.charCodeAt(0)) : undefined;
+    return await invoke("generate_image_command", { request: {
+      model: "fal_birefnet", provider: "fal_proxy",
+      image_media_tokens: request.image_media_token ? [request.image_media_token] : undefined,
+      canvas_image_raw_bytes: bytes,
+      frontend_caller: request.frontend_caller,
+      frontend_subscriber_id: request.frontend_subscriber_id,
+    } });
+  }
   let mutableRequest : RawEnqueueImageBgRemovalRequest = {};
 
   if (!!request.image_media_token) {

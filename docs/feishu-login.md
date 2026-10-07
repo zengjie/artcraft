@@ -79,9 +79,9 @@ curl http://localhost:12345/healthz
 export ARTCRAFT_PROXY_URL=https://artcraft-api.example.com
 ```
 
-在仓库根目录运行 `./script/artcraft/unix_dev.sh` 启动源码开发版（需要 Rust、Tauri CLI 2、平台依赖及前端依赖）。此变量由 Rust 进程读取，不是 Vite 配置。普通浏览器打开 Vite 页面不能代替 Tauri 桌面登录桥。
+在仓库根目录设置 `export VITE_FAL_PROXY=true`，再运行 `./script/artcraft/unix_dev.sh` 启动源码开发版（需要 Rust、Tauri CLI 2、平台依赖及前端依赖）。此变量由 Rust 进程读取，不是 Vite 配置。普通浏览器打开 Vite 页面不能代替 Tauri 桌面登录桥。
 
-1. 在桌面端点击「使用飞书登录」。
+1. 在原版「Settings → Account」或首次登录窗口的 fal Proxy 区块点击飞书登录。官方 ArtCraft 登录仍独立保留。
 2. 系统浏览器打开 Proxy 登录页，点击「继续使用飞书」。
 3. 在飞书完成授权。
 4. Proxy 显示登录用户名称及确认码。与桌面端的确认码核对一致后，点击「确认登录此设备」。

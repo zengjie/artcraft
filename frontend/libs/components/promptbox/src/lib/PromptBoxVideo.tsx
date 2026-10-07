@@ -112,7 +112,7 @@ interface PromptBoxVideoProps {
 export const PromptBoxVideo = ({
   useJobContext,
   onEnqueuePressed,
-  selectedModel,
+  selectedModel: catalogModel,
   selectedProvider,
   imageMediaId,
   url,
@@ -122,6 +122,7 @@ export const PromptBoxVideo = ({
   credits,
   modelSelector,
 }: PromptBoxVideoProps) => {
+  const selectedModel = catalogModel?.forProvider(selectedProvider);
   useSignals();
 
   // for the image media id and url, we need to set the reference image gallery panel.
@@ -1571,6 +1572,7 @@ export const PromptBoxVideo = ({
               >
                 <div>
                   <GenerateIconButton
+                costLabel={selectedProvider === GenerationProvider.FalProxy ? "fal · 按用量计费" : undefined}
                     onClick={handleEnqueue}
                     disabled={!prompt.trim()}
                     loading={isEnqueueing}

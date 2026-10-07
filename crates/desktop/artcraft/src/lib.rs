@@ -1,3 +1,7 @@
+#[cfg(feature = "fal-proxy")]
+mod fal_proxy_command;
+#[cfg(feature = "fal-proxy")]
+mod fal_proxy_integration;
 use crate::core::commands::cost_estimate::estimate_audio_cost_command::estimate_audio_cost_command;
 use crate::core::commands::cost_estimate::estimate_mesh_cost_command::estimate_mesh_cost_command;
 use crate::core::commands::generate::generate_splat_command::generate_splat_command;
@@ -101,6 +105,11 @@ pub fn run() {
   println!("Loading config...");
   let app_data_root = AppDataRoot::create_default().expect("data directory should be created");
   let app_data_root_2 = app_data_root.clone();
+  #[cfg(feature = "fal-proxy")]
+  let fal_proxy = fal_proxy_provider::ProxyProvider::new(
+    &std::env::var("ARTCRAFT_PROXY_URL").unwrap_or_else(|_| "http://localhost:12345".into()),
+    app_data_root.path().join("extensions/fal-proxy/session.json"),
+  ).expect("valid fal Proxy configuration");
 
   println!("Getting platform info...");
   let artcraft_platform_info = ArtcraftPlatformInfo::get();
@@ -171,6 +180,8 @@ pub fn run() {
       //  )?;
       //}
       let app = app.handle().clone();
+      #[cfg(feature = "fal-proxy")]
+      tauri::async_runtime::spawn(fal_proxy_integration::poll(app.clone()));
       let handle = app.clone();
       let root = app_data_root_2.clone();
       let env_config = app_env_configs_2.clone();
@@ -224,7 +235,12 @@ pub fn run() {
 
   // TODO: Break this out into another module, because RustRover/IntelliJ lags with these macros.
   //  My first attempt at naively doing this didn't work because the macros can't find their codegen'd targets.
+  #[cfg(feature = "fal-proxy")]
+  let builder = builder.manage(fal_proxy);
+
   let builder = builder.invoke_handler(tauri::generate_handler![
+    #[cfg(feature = "fal-proxy")]
+    fal_proxy_command::fal_proxy_command,
     check_sora_session_command,
     download_directory_reveal_command,
     download_media_file_command,

@@ -14,7 +14,7 @@ use serde_derive::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::str::FromStr;
 use artcraft_client::endpoints::media_files::get_media_file::get_media_file;
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, State, Manager};
 use tokens::tokens::media_files::MediaFileToken;
 use crate::core::state::app_preferences::app_preferences_manager::AppPreferencesManager;
 
@@ -85,8 +85,13 @@ pub async fn handle_request(
   let app_prefs = app_prefs.get_clone()?;
 
   // TODO: Api should return the extension and suggested filename so we can better construct something.
+  let host = app_env_configs.storyteller_host.clone();
+  #[cfg(feature = "fal-proxy")]
+  let host = if app.state::<fal_proxy_provider::ProxyProvider>().knows_media(request.media_token.as_str()).await {
+    artcraft_client::utils::api_host::ApiHost::Proxy { origin: app.state::<fal_proxy_provider::ProxyProvider>().origin().to_owned() }
+  } else { host };
   let media_file = get_media_file(
-    &app_env_configs.storyteller_host,
+    &host,
     &request.media_token,
   ).await?;
 

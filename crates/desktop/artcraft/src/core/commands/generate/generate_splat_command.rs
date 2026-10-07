@@ -5,6 +5,12 @@ use tauri::{AppHandle, Manager};
 
 #[tauri::command]
 pub async fn generate_splat_command(mut request: OmniRequest, app: AppHandle) -> OmniResult {
+  #[cfg(feature = "fal-proxy")]
+  let mut request = crate::fal_proxy_integration::prepare_references(request, &app).await?;
+  #[cfg(feature = "fal-proxy")]
+  if request.provider == Some(enums::common::generation_provider::GenerationProvider::FalProxy) {
+    return crate::fal_proxy_integration::generate(request, Modality::Splat, &app).await;
+  }
   if request.uses_artcraft() {
     return omni::generate(request, Modality::Splat, &app).await;
   }

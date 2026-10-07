@@ -18,6 +18,10 @@ impl SerializeMarker for EstimateVideoCostResponse {}
 
 #[tauri::command]
 pub async fn estimate_video_cost_command(request: OmniRequest, app: AppHandle) -> OmniResult {
+  #[cfg(feature = "fal-proxy")]
+  if request.provider == Some(enums::common::generation_provider::GenerationProvider::FalProxy) {
+    return crate::fal_proxy_integration::estimate(request, Modality::Video, &app).await;
+  }
   if request.uses_artcraft() {
     return omni::estimate(request, Modality::Video, &app).await;
   }

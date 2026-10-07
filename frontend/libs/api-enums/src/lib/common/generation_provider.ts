@@ -9,6 +9,7 @@ export enum GenerationProvider {
   Sora = "sora",
   WorldLabs = "world_labs",
   Fal = "fal",
+  FalProxy = "fal_proxy",
   Higgsfield = "higgsfield",
   Krea = "krea",
   Leonardo = "leonardo",

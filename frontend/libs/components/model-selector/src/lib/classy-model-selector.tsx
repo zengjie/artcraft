@@ -1,3 +1,4 @@
+import { setUploadProvider } from "@storyteller/fal-proxy";
 import {
   PopoverMenu,
   type PopoverItem,
@@ -84,7 +85,7 @@ function ProviderTooltipContent({
   useEffect(() => {
     if (!modelId) return;
     if ((!selectedProvider || !allowedProviders.includes(selectedProvider)) && allowedProviders.length > 0) {
-      setSelectedProvider(page, modelId, allowedProviders[0]);
+      setSelectedProvider(page, modelId, allowedProviders[0], true);
     }
   }, [page, modelId, selectedProvider, allowedProviders, setSelectedProvider]);
 
@@ -155,7 +156,7 @@ export function ClassyModelSelector({
   useEffect(() => {
     // Initialize selected model if not set
     if (!selectedModels[page] && items[0]) {
-      setSelectedModel(page, defaultModelForPage(itemModels, page));
+      setSelectedModel(page, defaultModelForPage(itemModels, page), true);
     }
   }, []);
 
@@ -166,12 +167,16 @@ export function ClassyModelSelector({
   useEffect(() => {
     const selected = selectedModels[page];
     if (!selected) return;
-    const fresh = itemModels.find((m) => m.tauriId === selected.tauriId);
+    const automatic = !useClassyModelSelectorStore.getState().explicitModels?.[page];
+    const preferred = automatic ? defaultModelForPage(itemModels, page) : undefined;
+    const fresh = preferred?.getProviders()[0] === GenerationProvider.FalProxy ? preferred : itemModels.find((m) => m.tauriId === selected.tauriId);
     if (fresh !== undefined && fresh !== selected) {
-      setSelectedModel(page, fresh);
+      setSelectedModel(page, fresh, true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, selectedModels, page]);
+
+  useEffect(() => { setUploadProvider(selectedProvider); }, [selectedProvider, page, selectedModel]);
 
   // Initialize defaults and replace providers removed from the catalog.
   useEffect(() => {
@@ -179,9 +184,10 @@ export function ClassyModelSelector({
       const modelId = item.model?.id;
       if (!modelId) continue;
       const allowed = item.model?.getProviders() || DEFAULT_PROVIDER_OPTIONS;
-      if (allowed.includes(selectedProvidersByModel[modelId])) continue;
+      const explicit = useClassyModelSelectorStore.getState().explicitProviders?.[`${page}:${modelId}`];
+      if (allowed.includes(selectedProvidersByModel[modelId]) && (explicit || selectedProvidersByModel[modelId] === allowed[0])) continue;
       if (allowed.length > 0) {
-        setSelectedProvider(page, modelId, allowed[0]);
+        setSelectedProvider(page, modelId, allowed[0], true);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

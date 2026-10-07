@@ -1,10 +1,16 @@
-import { ChevronRightIcon, HouseIcon, ImagesIcon, MinusIcon, PictureInPicture2Icon, SettingsIcon, SquareIcon, XIcon } from "lucide-react";
+import { CalculatorIcon, CheckIcon, ChevronRightIcon, CircleAlertIcon, CoinsIcon, GemIcon, HouseIcon, ImagesIcon, MinusIcon, PictureInPicture2Icon, SettingsIcon, SquareIcon, XIcon } from "lucide-react";
 import { DynamicIcon } from "@storyteller/icons";
 import { signal } from "@preact/signals-react";
 import { useSignals } from "@preact/signals-react/runtime";
+import { useCreditsState, type CreditsIconStatus } from "@storyteller/credits";
 import { gtagEvent } from "@storyteller/google-analytics";
 import { ProviderBillingModal } from "@storyteller/provider-billing-modal";
 import { ProviderSetupModal } from "@storyteller/provider-setup-modal";
+import { useSubscriptionState } from "@storyteller/subscription";
+import {
+  useCreditsBalanceChangedEvent,
+  useSubscriptionPlanChangedEvent,
+} from "@storyteller/tauri-events";
 import {
   useTauriPlatform,
   useTauriWindowControls,
@@ -20,6 +26,14 @@ import {
   MenuIconItem,
   MenuIconSelector,
 } from "@storyteller/ui-menu-icon-selector";
+import { PopoverMenu } from "@storyteller/ui-popover";
+import {
+  useCreditsModalStore,
+  usePricingModalStore,
+  CostBreakdownModal,
+  useCostBreakdownModalStore,
+  CreditsModal,
+} from "@storyteller/ui-pricing-modal";
 import {
   GalleryAutoplayToggle,
   GallerySelectToggle,
@@ -41,6 +55,8 @@ import { useImageTo3DStore } from "~/pages/PageImageTo3DObject/ImageTo3DStore";
 import { useImageTo3DWorldStore } from "~/pages/PageImageTo3DWorld/ImageTo3DWorldStore";
 import { useRemoveBackgroundStore } from "~/pages/PageRemoveBackground/RemoveBackgroundStore";
 import { TabId, useTabStore } from "~/pages/Stores/TabState";
+import { AUTH_STATUS } from "~/enums";
+import { authentication } from "~/signals";
 import { setLogoutStates } from "~/signals/authentication/utilities";
 import type { BaseSelectorImage } from "@storyteller/ui-pagedraw";
 import {
@@ -67,6 +83,7 @@ type SettingsSection =
   | "billing";
 
 const SWITCHER_THROTTLE_TIME = 500; // milliseconds
+const CREDITS_POLL_INTERVAL = 60_000; // milliseconds
 
 // NB: See `TabState` for the default tab. The Apps ("More") entry is first so
 // it's the landing tab and leftmost in the switcher.
@@ -93,6 +110,74 @@ const appMenuTabs: MenuIconItem[] = [
 
 export const topNavMediaId = signal<string>("");
 export const topNavMediaUrl = signal<string>("");
+
+const CreditsCoinWithStatus = ({
+  iconStatus,
+}: {
+  iconStatus: CreditsIconStatus;
+}) => {
+  const showBadge = iconStatus !== "hidden";
+
+  const badgeColorClass =
+    iconStatus === "failed"
+      ? "bg-red text-white"
+      : iconStatus === "recovered"
+        ? "bg-emerald-500 text-white"
+        : "bg-amber-400 text-black"; // 'slow'
+
+  const badgeIconDef = iconStatus === "recovered" ? CheckIcon : CircleAlertIcon;
+
+  const tooltipMessage =
+    iconStatus === "failed"
+      ? "Couldn't refresh your balance."
+      : iconStatus === "recovered"
+        ? "Balance up to date."
+        : "Refreshing your balance — current amount may not be up to date.";
+
+  const showRetry = iconStatus === "slow" || iconStatus === "failed";
+
+  const handleRetry = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    console.log("TopBar: Retrying credits fetch");
+
+    void useCreditsState.getState().fetchFromServer();
+  };
+
+  return (
+    <Tooltip
+      position="bottom"
+      interactive
+      disabled={!showBadge}
+      content={
+        <div className="flex max-w-[220px] flex-col gap-2 text-xs text-base-fg">
+          <span>{tooltipMessage}</span>
+          {showRetry && (
+            <Button
+              variant="secondary"
+              className="h-7 self-start px-2 text-xs"
+              onClick={handleRetry}
+            >
+              Retry
+            </Button>
+          )}
+        </div>
+      }
+    >
+      <span className="relative inline-flex">
+        <CoinsIcon className="text-[11px] text-primary" />
+        {showBadge && (
+          <span
+            className={`absolute -right-1.5 -top-1.5 flex h-3 w-3 items-center justify-center ring-1 ring-ui-panel ${badgeColorClass}`}
+          >
+            <DynamicIcon icon={badgeIconDef} className="text-[7px]" />
+          </span>
+        )}
+      </span>
+    </Tooltip>
+  );
+};
 
 export const TopBar = ({ pageName }: Props) => {
   useSignals();
@@ -127,6 +212,51 @@ export const TopBar = ({ pageName }: Props) => {
   const is3DEditorReady = usePageSceneStore((s) => s.is3DEditorInitialized);
   const [disableSwitcher, setDisableSwitcher] = useState(false);
   const switcherThrottle = useRef(false);
+
+  const sumTotalCredits = useCreditsState((s) => s.totalCredits);
+  const creditsIconStatus = useCreditsState((s) => s.iconStatus);
+
+  // Just calling this function kills the app:
+  const subscriptionStore = useSubscriptionState();
+  const hasPaidPlan = subscriptionStore.hasPaidPlan();
+
+  // Fetch credits + subscription on entering LOGGED_IN, then poll credits every
+  // 60s. Reading via getState() inside the effect keeps the dep array honest
+  // (the only real dep is the auth status). Earlier versions had a 1s setTimeout
+  // band-aid to outrun intermediate auth states; gating on LOGGED_IN replaces it.
+  const authStatus = authentication.status.value;
+  useEffect(() => {
+    if (authStatus !== AUTH_STATUS.LOGGED_IN) return;
+
+    void useCreditsState.getState().fetchFromServer();
+    void useSubscriptionState.getState().fetchFromServer();
+
+    const interval = setInterval(() => {
+      void useCreditsState.getState().fetchFromServer();
+      console.log("TopBar: Polled credits");
+    }, CREDITS_POLL_INTERVAL);
+
+    // Imperative refresh requests, e.g. dispatched by the shared
+    // useGenerationJobs hook when it observes a newly-failed job (the server
+    // may have refunded the charge).
+    const handleCreditsChange = () => {
+      void useCreditsState.getState().fetchFromServer();
+    };
+    window.addEventListener("credits-change", handleCreditsChange);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("credits-change", handleCreditsChange);
+    };
+  }, [authStatus]);
+
+  useCreditsBalanceChangedEvent(async () => {
+    useCreditsState.getState().fetchFromServer();
+  });
+
+  useSubscriptionPlanChangedEvent(async () => {
+    subscriptionStore.fetchFromServer();
+  });
 
   const disableTabSwitcher = () => {
     return (
@@ -261,6 +391,8 @@ export const TopBar = ({ pageName }: Props) => {
 
   const pageCrumbs = getPageCrumbs();
 
+  const { toggleModal: toggleSubscriptionModal } = usePricingModalStore();
+  const { toggleModal: toggleCreditsModal } = useCreditsModalStore();
 
   // Pick logo based on current theme (light uses black logo; others use white)
   const [_logoSrc, setLogoSrc] = useState<string>(
@@ -403,9 +535,89 @@ export const TopBar = ({ pageName }: Props) => {
               {(tabStore.activeTabId === "IMAGE" ||
                 tabStore.activeTabId === "VIDEO" ||
                 tabStore.activeTabId === "AUDIO") && <GalleryViewToggle />}
-              <Button variant="secondary" onClick={handleOpenBillingSettings} className="h-8 px-3">
-                fal.ai 计费
-              </Button>
+              <PopoverMenu
+                position="bottom"
+                align="end"
+                triggerIcon={
+                  <CreditsCoinWithStatus iconStatus={creditsIconStatus} />
+                }
+                triggerLabel={
+                  <span className="whitespace-nowrap text-sm font-medium">
+                    {sumTotalCredits.toLocaleString()}
+                  </span>
+                }
+                buttonClassName="h-8 px-3 ps-2.5 bg-transparent hover:bg-white/10 border border-white/15 hover:border-white/30 shadow-none text-white/80 rounded-[3px] gap-1.5"
+                panelClassName="mt-2 bg-[#101014] border border-white/15 text-white rounded-[3px]"
+              >
+                {(close) => (
+                  <div className="w-72 p-3 text-white">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-sm font-medium text-white/70">
+                        Your credit balance
+                      </span>
+                      <button
+                        className="text-sm font-medium text-primary transition-colors hover:text-primary-300"
+                        onClick={() => {
+                          close();
+                          toggleCreditsModal();
+                        }}
+                      >
+                        Buy credits
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2 text-3xl font-semibold tracking-tight text-white">
+                      <CoinsIcon className="text-xl text-primary" />
+                      {sumTotalCredits.toLocaleString()}
+                    </div>
+
+                    <button
+                      className="mt-2 flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-white/50 transition-colors hover:text-white"
+                      onClick={() => {
+                        close();
+                        useCostBreakdownModalStore.getState().openModal();
+                      }}
+                    >
+                      <CalculatorIcon />
+                      Cost calculator
+                    </button>
+
+                    <div className="mt-3 flex gap-2">
+                      <Button
+                        variant="secondary"
+                        className="h-9 grow"
+                        onClick={() => {
+                          close();
+                          handleOpenBillingSettings();
+                        }}
+                      >
+                        See details
+                      </Button>
+                      <Button
+                        variant="primary"
+                        className="h-9 grow"
+                        onClick={() => {
+                          close();
+                          toggleSubscriptionModal();
+                        }}
+                        icon={GemIcon}
+                      >
+                        Support
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </PopoverMenu>
+
+              {!hasPaidPlan && (
+                <Button
+                  variant="primary"
+                  icon={GemIcon}
+                  onClick={toggleSubscriptionModal}
+                  className="h-8 px-3"
+                >
+                  Upgrade
+                </Button>
+              )}
 
               <TaskQueue />
 
@@ -504,6 +716,8 @@ export const TopBar = ({ pageName }: Props) => {
 
       <ProviderSetupModal />
       <ProviderBillingModal isVideoPage={tabStore.activeTabId === "VIDEO"} />
+      <CreditsModal />
+      <CostBreakdownModal activeTabId={tabStore.activeTabId} />
     </>
   );
 };

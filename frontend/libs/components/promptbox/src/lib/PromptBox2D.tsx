@@ -295,7 +295,7 @@ export const PromptBox2D = ({
       await Promise.resolve(
         onGenerateClick(prompt, {
           aspectRatio,
-          resolution,
+          resolution: selectedImageModel?.canChangeResolution ? resolution : undefined,
           images: referenceImages,
           selectedProvider: selectedProvider,
         }),
@@ -525,6 +525,7 @@ export const PromptBox2D = ({
                 confirmClear={referenceImages.length > 0}
               />
               <GenerateButton
+                costLabel={selectedProvider === GenerationProvider.FalProxy ? "fal · 按用量计费" : undefined}
                 className="flex items-center border-none bg-white px-3 text-sm font-bold text-black hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50"
                 icon={undefined}
                 onClick={handleGenerate}

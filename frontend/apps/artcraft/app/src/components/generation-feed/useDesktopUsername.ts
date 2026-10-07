@@ -1,9 +1,11 @@
+import { useProxySession } from "@storyteller/fal-proxy";
 import { useEffect, useState } from "react";
 import { UsersApi } from "@storyteller/api";
 
 // Resolve the current session's username (needed by the gallery list API).
 // Mirrors the gallery modal's session fetch; null while loading / logged out.
 export function useDesktopUsername(): string | null {
+  const proxy = useProxySession(s => s.session);
   const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
@@ -23,5 +25,5 @@ export function useDesktopUsername(): string | null {
     };
   }, []);
 
-  return username;
+  return username ?? (proxy?.logged_in ? proxy.user?.username ?? null : null);
 }

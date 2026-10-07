@@ -423,11 +423,12 @@ const PageDraw = ({
   const generateInFlightRef = useRef(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const selectedImageModel: ImageModel | undefined =
+  const catalogImageModel: ImageModel | undefined =
     useSelectedImageModel(PAGE_ID);
 
   const selectedProvider: GenerationProvider | undefined =
-    useSelectedProviderForModel(PAGE_ID, selectedImageModel?.id);
+    useSelectedProviderForModel(PAGE_ID, catalogImageModel?.id);
+  const selectedImageModel = catalogImageModel?.forProvider(selectedProvider);
 
   const supportsMaskedInpainting =
     selectedImageModel?.usesInpaintingMask ?? false;
@@ -1286,7 +1287,7 @@ const PageDraw = ({
               variant="embedded"
               items={canvas2dModelList}
               page={PAGE_ID}
-              showProviderSelection={false}
+              showProviderSelection={true}
             />
           }
         />

@@ -213,6 +213,7 @@ export const getProviderDisplayName = (provider: string): string => {
   const displayNames: Record<string, string> = {
     artcraft: "ArtCraft",
     fal: "FAL",
+    fal_proxy: "fal Proxy",
     grok: "Grok",
     midjourney: "Midjourney",
     sora: "Sora",

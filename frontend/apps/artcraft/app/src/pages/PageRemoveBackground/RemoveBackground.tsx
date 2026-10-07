@@ -1,3 +1,5 @@
+import { backgroundRemovalModel } from "@storyteller/fal-proxy";
+import { ClassyModelSelector, ModelPage } from "@storyteller/ui-model-selector";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { DownloadIcon, EyeIcon, ImagesIcon, PlusIcon, UploadIcon, WandSparklesIcon } from "lucide-react";
 import { Button } from "@storyteller/ui-button";
@@ -546,6 +548,7 @@ export const RemoveBackground = () => {
       <div className="flex h-[calc(100vh-56px)] w-full overflow-hidden bg-ui-panel text-base-fg">
         <div className="flex flex-1 items-center justify-center overflow-y-auto p-16">
           <main className="flex h-full w-full flex-col items-center justify-center">
+            <div className="mb-4"><ClassyModelSelector page={ModelPage.BackgroundRemoval} variant="embedded" items={[{ label: "Background Removal", model: backgroundRemovalModel }]} /></div>
             {showUploadScreen ? (
               <div className="w-full max-w-5xl">
                 <div className="relative aspect-video overflow-hidden border border-ui-panel-border bg-ui-background">

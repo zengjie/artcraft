@@ -1,3 +1,4 @@
+import { extendProxy3DItems } from "@storyteller/fal-proxy";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { animated, useSpring } from "@react-spring/web";
 import { Button, GenerateButton } from "@storyteller/ui-button";
@@ -59,6 +60,9 @@ interface ImageTo3DExperienceProps {
   backgroundImage?: string;
 }
 
+const PROXY_OBJECT_ITEMS = extendProxy3DItems(IMAGE_TO_3D_OBJECT_PAGE_MODEL_LIST, "mesh");
+const PROXY_WORLD_ITEMS = extendProxy3DItems(IMAGE_TO_3D_WORLD_PAGE_MODEL_LIST, "splat");
+
 const MODE_TABS = [
   { id: "image", label: "Image to 3D" },
   // { id: "text", label: "Text to 3D" },
@@ -91,6 +95,8 @@ export const ImageTo3DExperience = ({
     selectedWorldModel?.id,
   );
   const selectedObjectModel = useSelectedModel(OBJECT_MODEL_PAGE);
+  const selectedObjectProvider = useSelectedProviderForModel(OBJECT_MODEL_PAGE, selectedObjectModel?.id);
+  useEffect(() => { setActiveMode(selectedObjectModel?.tauriId === "hunyuan_3d_v3_text" ? "text" : "image"); }, [selectedObjectModel?.tauriId]);
   const selectedObjectModelId =
     (selectedObjectModel?.id as EnqueueImageTo3dObjectModel | undefined) ??
     DEFAULT_OBJECT_MODEL_ID;
@@ -453,6 +459,7 @@ export const ImageTo3DExperience = ({
         });
 
         await GenerateMesh({
+          provider: selectedObjectProvider,
           prompt: snapshotPrompt || undefined,
           reference_image_media_tokens: activeMode === "image" && uploadedMediaToken ? [uploadedMediaToken] : undefined,
           model: selectedObjectModel?.tauriId ?? selectedObjectModelId,
@@ -1118,14 +1125,15 @@ export const ImageTo3DExperience = ({
                   variant="embedded"
                   items={
                     variant === "world"
-                      ? IMAGE_TO_3D_WORLD_PAGE_MODEL_LIST
-                      : IMAGE_TO_3D_OBJECT_PAGE_MODEL_LIST
+                      ? PROXY_WORLD_ITEMS
+                      : PROXY_OBJECT_ITEMS
                   }
                   page={
                     variant === "world" ? WORLD_MODEL_PAGE : OBJECT_MODEL_PAGE
                   }
                 />
                 <GenerateButton
+                  costLabel={(variant === "world" ? selectedWorldProvider : selectedObjectProvider) === "fal_proxy" ? "fal · 按用量计费" : undefined}
                   variant="primary"
                   icon={undefined}
                   disabled={!canGenerate}

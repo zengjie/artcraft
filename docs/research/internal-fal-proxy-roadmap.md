@@ -1,5 +1,8 @@
 # 内部使用 ArtCraft + fal Proxy：审计结论与迁移路线
 
+> 当前实现及验收状态见 [统一接入文档](../fal-proxy-integration.md)；下文保留为早期研究记录。
+
+
 研究日期：2026-10-07。审计版本：fork `21a4385738`；上游 `main` 为 `3e5793b6934b51536606720e5d56bcfd1fe7cc2d`，通过 `git ls-remote upstream refs/heads/main` 实时核对，目前正是本 fork 的基础提交。本报告是迁移设计，**不是全功能验收报告，也不表示下述改造已经实施**。
 
 ## 结论

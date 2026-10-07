@@ -22,6 +22,7 @@ use utoipa::ToSchema;
 pub enum GenerationProvider {
   Artcraft,
   Fal,
+  FalProxy,
   Grok,
   Midjourney,
   Sora,
@@ -50,6 +51,7 @@ impl GenerationProvider {
     match self {
       Self::Artcraft => "artcraft",
       Self::Fal => "fal",
+      Self::FalProxy => "fal_proxy",
       Self::Grok => "grok",
       Self::Midjourney => "midjourney",
       Self::Sora => "sora",
@@ -69,6 +71,7 @@ impl GenerationProvider {
     match value {
       "artcraft" => Ok(Self::Artcraft),
       "fal" => Ok(Self::Fal),
+      "fal_proxy" => Ok(Self::FalProxy),
       "grok" => Ok(Self::Grok),
       "midjourney" => Ok(Self::Midjourney),
       "sora" => Ok(Self::Sora),
@@ -91,6 +94,7 @@ impl GenerationProvider {
     BTreeSet::from([
       Self::Artcraft,
       Self::Fal,
+      Self::FalProxy,
       Self::Grok,
       Self::Midjourney,
       Self::Sora,

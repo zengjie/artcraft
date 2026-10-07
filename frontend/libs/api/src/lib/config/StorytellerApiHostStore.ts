@@ -1,5 +1,5 @@
 // Artcraft / Storyteller API backend
-const DEFAULT_API_HOST_PRODUCTION = "http://localhost:12345";
+const DEFAULT_API_HOST_PRODUCTION = "https://api.storyteller.ai";
 const DEFAULT_API_HOST_DEVELOPMENT = "http://localhost:12345";
 
 

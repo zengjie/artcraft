@@ -5,12 +5,12 @@ import { join } from 'node:path';
 export class Media {
   constructor(store, config) { this.store = store; this.config = config; }
   add(owner, modality, file, metadata = {}) {
-    const id = `mf_${token()}`;
+    const id = `mf_fpx_${token()}`;
     const url = new URL(file.url);
     if (!['https:', 'http:'].includes(url.protocol)) fail(502, 'Invalid output URL');
-    const type = file.content_type || ({ image: 'image/png', video: 'video/mp4', audio: 'audio/wav', mesh: 'model/gltf-binary' })[modality];
+    const type = file.content_type || ({ image: 'image/png', video: 'video/mp4', audio: 'audio/wav', mesh: 'model/gltf-binary', splat: 'application/octet-stream', world: 'application/zip' })[modality];
     const item = {
-      token: id, media_class: modality, media_type: ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif', 'video/mp4': 'mp4', 'audio/wav': 'wav', 'audio/mpeg': 'mp3', 'model/gltf-binary': 'glb', 'application/octet-stream': modality === 'mesh' ? 'glb' : 'bin' })[type] || 'png',
+      token: id, media_class: modality, media_type: modality === 'splat' ? 'ply' : modality === 'world' ? 'zip' : ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif', 'video/mp4': 'mp4', 'audio/wav': 'wav', 'audio/mpeg': 'mp3', 'model/gltf-binary': 'glb', 'application/octet-stream': modality === 'mesh' ? 'glb' : 'bin' })[type] || 'png',
       media_links: { cdn_url: file.url, maybe_thumbnail_template: modality === 'image' ? file.url : null, maybe_video_previews: null },
       cover_image: { maybe_links: null, default_cover: { image_index: 0, color_index: 0 } },
       maybe_engine_category: modality === 'mesh' ? 'object' : null,
@@ -43,7 +43,7 @@ export class Media {
     const dir = join(this.config.dataDir, 'uploads');
     mkdirSync(dir, { recursive: true, mode: 0o700 });
     writeFileSync(join(dir, localFile), Buffer.from(await file.arrayBuffer()), { mode: 0o600 });
-    const item = this.add(owner, supported[file.type], { url: `${this.config.origin}/assets/${localFile}`, content_type: file.type }, { is_user_upload: true, maybe_original_filename: file.name, is_intermediate_system_file: form.get('is_intermediate_system_file') === 'true' });
+    const item = this.add(owner, supported[file.type], { url: `${this.config.origin}/assets/${localFile}`, content_type: file.type }, { origin_category: 'upload', is_user_upload: true, maybe_original_filename: file.name, is_intermediate_system_file: form.get('is_intermediate_system_file') === 'true' });
     this.store.put('media', item.token, { ...this.store.get('media', item.token), localFile });
     this.store.put('asset', localFile, { contentType: file.type });
     return { success: true, media_file_token: item.token };

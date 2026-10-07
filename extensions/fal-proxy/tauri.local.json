@@ -1,0 +1,6 @@
+{
+  "productName": "ArtCraft fal Local",
+  "identifier": "ai.artcraft.fal.local",
+  "build": { "beforeBuildCommand": "", "devUrl": null },
+  "bundle": { "createUpdaterArtifacts": false }
+}

@@ -4,13 +4,16 @@ import { ImageModel, Model, VideoModel } from "@storyteller/model-list";
 import { GenerationProvider } from "@storyteller/api-enums";
 
 interface ClassyModelSelectorState {
+  explicitModels?: Partial<Record<ModelPage, boolean>>;
+  explicitProviders?: Record<string, boolean>;
   selectedModels: { [page in ModelPage]?: Model };
   selectedProviders: { [page in ModelPage]?: { [modelId: string]: GenerationProvider } };
-  setSelectedModel: (page: ModelPage, model: Model) => void;
+  setSelectedModel: (page: ModelPage, model: Model, automatic?: boolean) => void;
   setSelectedProvider: (
     page: ModelPage,
     modelId: string,
-    provider: GenerationProvider
+    provider: GenerationProvider,
+    automatic?: boolean
   ) => void;
 }
 
@@ -18,15 +21,17 @@ export const useClassyModelSelectorStore = create<ClassyModelSelectorState>(
   (set) => ({
     selectedModels: {},
     selectedProviders: {},
-    setSelectedModel: (page, model) =>
+    setSelectedModel: (page, model, automatic = false) =>
       set((state) => ({
+        explicitModels: { ...state.explicitModels, [page]: state.explicitModels?.[page] || !automatic },
         selectedModels: {
           ...state.selectedModels,
           [page]: model,
         },
       })),
-    setSelectedProvider: (page, modelId, provider) =>
+    setSelectedProvider: (page, modelId, provider, automatic = false) =>
       set((state) => ({
+        explicitProviders: { ...state.explicitProviders, [`${page}:${modelId}`]: state.explicitProviders?.[`${page}:${modelId}`] || !automatic },
         selectedProviders: {
           ...state.selectedProviders,
           [page]: {

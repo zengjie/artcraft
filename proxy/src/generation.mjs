@@ -21,6 +21,9 @@ export class Generation {
     }
     const active = this.store.list('job').filter(j => j.owner === owner && !['complete_success', 'complete_failure'].includes(j.state));
     if (active.length >= this.config.maxActiveJobs) fail(429, 'Too many active jobs');
+    const today = new Date().toISOString().slice(0, 10);
+    const daily = this.store.list('job').filter(j => j.owner === owner && j.created.startsWith(today));
+    if (daily.length >= (this.config.maxDailyJobs ?? 100)) fail(429, 'Daily generation limit reached');
     const jobId = `job_${token()}`;
     const job = { owner, modality, model: built.model.model, state: 'submitting', created: new Date().toISOString(), fingerprint, endpoint: built.endpoint };
     this.store.put('job', jobId, job);
@@ -56,11 +59,17 @@ export class Generation {
         if (status.error) { job.state = 'complete_failure'; job.error = 'fal generation failed'; }
         else {
           const result = await this.call(job.responseUrl);
-          const files = result.images || [result.image || result.video || result.audio_file || result.audio || result.model_glb_pbr || result.model_glb].filter(Boolean);
+          if (job.modality === 'text') {
+            if (typeof result.prompt !== 'string' || !result.prompt.trim()) { job.state = 'complete_failure'; job.error = 'fal returned no prompt'; }
+            else { job.text = result.prompt; job.state = 'complete_success'; }
+            this.store.put('job', id, job);
+            return;
+          }
+          const files = result.images || [result.image || result.video || result.audio_file || result.audio || result.model_glb_pbr || result.model_glb || result.model_mesh || result.world_file].filter(Boolean);
           if (!files.length || files.some(f => typeof f?.url !== 'string')) { job.state = 'complete_failure'; job.error = 'fal returned no supported output'; }
           else {
             const batch = `batch_${token()}`;
-            job.outputs = files.map(f => this.media.add(job.owner, job.modality, f, { maybe_batch_token: batch }).token);
+            job.outputs = files.map(f => this.media.add(job.owner, job.modality, f, { maybe_batch_token: batch, maybe_model_type: job.model, origin_category: 'inference' }).token);
             job.batch = batch;
             job.state = 'complete_success';
           }
@@ -82,9 +91,9 @@ export class Generation {
     const output = job.outputs?.[0] && this.store.get('media', job.outputs[0])?.item;
     return {
       job_token: id, created_at: job.created, updated_at: new Date(job.lastPoll || job.created).toISOString(),
-      request: { inference_category: ({ image: 'image_generation', video: 'video_generation', audio: 'audio_generation', mesh: 'object_generation' })[job.modality], maybe_model_type: job.model },
+      request: { inference_category: ({ image: 'image_generation', video: 'video_generation', audio: 'audio_generation', mesh: 'object_generation', splat: 'splat_generation', world: 'world_generation', text: 'prompt_generation' })[job.modality], maybe_model_type: job.model },
       status: { status: job.state === 'submitting' ? 'pending' : job.state, attempt_count: 1, requires_keepalive: false, progress_percentage: job.state === 'complete_success' ? 100 : 0, maybe_failure_message: job.error || (job.state === 'submitting' ? 'Submission pending or uncertain. Check the fal dashboard before retrying.' : null) },
-      maybe_result: output ? { entity_type: 'media_file', entity_token: output.token, maybe_batch_token: job.batch, media_links: output.media_links, maybe_successfully_completed_at: output.created_at } : null,
+      maybe_result: job.text ? { entity_type: 'text', text: job.text } : output ? { entity_type: 'media_file', entity_token: output.token, maybe_batch_token: job.batch, media_links: output.media_links, maybe_successfully_completed_at: output.created_at } : null,
     };
   }
   validateUrl(value) {
