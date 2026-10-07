@@ -1,12 +1,23 @@
 # fal Proxy 统一接入与验收
 
-更新：2026-10-07。此文描述当前实现；早期 research 文件是设计过程记录，以此文的交付状态为准。
+更新：2026-10-07（目录扩展与界面整理）。此文描述当前实现；早期 research 文件是设计过程记录，以此文的交付状态为准。
 
 ## 产品约定
 
 沿用 ArtCraft 原版 UI。没有独立 fal 工作区。图片、视频、音频、3D 等使用原有页面、选择器、历史和编辑器回调；同一个模型可拥有官方与 fal 两套能力参数，选中服务商后使用对应参数。fal 已适配能力优先，用户明确选择官方后不强行覆盖。
 
 官方首页品牌、登录、余额、升级及订阅入口保留，官方 API host 不变。飞书登录放在原版 Account 设置及登录窗口中，只管理 Proxy 会话。不会伪造官方登录或将官方积分用于 fal；不会自动向另一服务商重试付费请求。LICENSE 原文未修改，沿用上游商业入口。
+
+## fal 在界面中的呈现
+
+fal 元素沿用 ArtCraft 的粗野主义体系，不引入新色与新字体。费用沿用原版“图标加数字”的语法：ArtCraft 积分是硬币图标加积分数，fal 则是 fal 标志加美元列价，放在同一位置、同一字号。界面文案与上游一致使用英文句式，服务商显示名为 "fal (team)"，与上游自带的官方 "FAL" 通道区分。
+
+- 生成按钮：`FalCostTag` 读取 Proxy capabilities 的 `price`，按数量、时长换算列价；按算力计费的模型显示 "metered"，悬停说明单价与计费归属。
+- 费用面板：fal 服务商下显示分辨率、时长、数量、单价与估算，并注明由团队 fal 账户结算、以 fal 账单为准。
+- 账户设置与登录弹窗：`fal team account` 区块与 ArtCraft、Grok、Midjourney 区块同构，飞书确认码以等宽数字展示。
+- 默认模型：页面在 fal 可用时优先选择上游默认模型的 fal 变体（图片页 Nano Banana Pro、视频页 Kling 2.5 Turbo Pro 等，见 `defaultModelForPage.ts`），用户显式选择后不再覆盖。
+- 3D 世界页：选中 TripoSplat 或 Hunyuan World 时副标题、按钮文案与说明随之变化，明示产物是物体 PLY 或 ZIP 包，不冒充 World Labs 世界。Hunyuan World 需要填写两层前景与场景类型，结果以可下载卡片呈现。
+- 视频提示框：fal 服务商下提供 "Draft prompt" 按钮，用 fal 视频提示词生成器把短想法扩写为完整提示词，可一键撤销。
 
 ## 模块与维护边界
 
@@ -32,9 +43,13 @@ Nano Banana 编辑器系统提示词采用固定的画布/3D 场景上下文前�
 
 ## 验收记录
 
-真实 fal API 验收 14/14 成功：FLUX 文生图、Nano 文生图/图像编辑、Qwen 角度、Fill 蒙版、Kling 文生/图生视频、Hunyuan 图生/文生网格、背景移除、音频、TripoSplat、Hunyuan World、视频提示词。13 个文件输出读取成功并核对 JPEG/PNG/MP4/GLB/WAV/PLY/ZIP 文件头，另一个返回文本。
+2026-10-07 目录扩展后新增 5 项真实验收，全部成功并核对文件头：FLUX.1 Dev（JPEG）、Seedream 4 文生图（JPEG）、Nano Banana 2 图像编辑（PNG）、ElevenLabs 音效（MP3）、Hunyuan 3D V3 图生网格（GLB）。累计 API 预留 US$12.33，加桌面 Nano 单张 US$0.10 共 US$12.43。Kling 2.6 Pro、Veo 3.1、Veo 3.1 Fast、Seedream 4.5、Nano Banana Pro 仅完成 fal schema 与参数映射单元测试，未付费真实验收；Veo 单次 4 到 8 秒的列价为 US$0.60 到 US$3.20，默认不选中。
 
-付费测试的保守预算预留为 US$12.04，另为桌面 Nano 单张测试预留 US$0.10，总预留 US$12.14，低于用户授权 US$20。**预留不是实际账单**；没有读取最终账单，不能宣称精确实际费用或服务端已有美元硬限额。测试账本位于本机 `/tmp/artcraft-fal-live/`，不提交含素材链接和个人标识的日志。
+此前真实 fal API 验收 14/14 成功：FLUX 文生图、Nano 文生图/图像编辑、Qwen 角度、Fill 蒙版、Kling 文生/图生视频、Hunyuan 图生/文生网格、背景移除、音频、TripoSplat、Hunyuan World、视频提示词。13 个文件输出读取成功并核对 JPEG/PNG/MP4/GLB/WAV/PLY/ZIP 文件头，另一个返回文本。
+
+付费测试的保守预算预留为 US$12.04，另为桌面 Nano 单张测试预留 US$0.10，总预留 US$12.14（截至首轮；最新累计见上文），低于用户授权 US$20。**预留不是实际账单**；没有读取最终账单，不能宣称精确实际费用或服务端已有美元硬限额。测试账本位于本机 `/tmp/artcraft-fal-live/`，不提交含素材链接和个人标识的日志。
+
+已验证的模拟界面行为（Playwright 加浏览器夹具，`frontend/tools/testing/fal-proxy-seamless.mjs` 与截图审查）：图片、视频、音频、3D 物体、3D 世界、角度页的 fal 列价标签与费用面板、Nano Banana 与 Veo 家族中的 fal 服务商芯片、Hunyuan World 标签表单、视频页 Draft prompt 按钮、账户区块。Hunyuan World 真实 ZIP 下载与 Draft prompt 真实填入尚未在桌面端逐项验收，仅 Proxy API 已通过。
 
 已验证的桌面行为：原版首页和商业入口、统一图片页优先 fal、Nano 同一选择器切换 ArtCraft/fal、真实单张生成后进入原版历史、将结果送入原版视频首帧。独立模拟 UI 测试 `frontend/tools/testing/fal-proxy-seamless.mjs` 验证原版入口及 fal 原生请求参数。所有复杂编辑器、全模型官方真实付费生成和所有桌面世界流程**尚未逐项端到端验证**，API 成功不替代这些验收。
 

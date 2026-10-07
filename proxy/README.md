@@ -19,21 +19,25 @@ npm start
 
 ## 能力
 
-| 能力         | fal 模型                      | 接入状态                       |
-|--------------|-------------------------------|--------------------------------|
-| 文生图       | FLUX.1 Schnell                | 原版图片页面                   |
-| 图片生成编辑 | Nano Banana                   | 原版图片、2D/3D 编辑流程适配    |
-| 角度编辑     | Qwen Image Edit Multiple Angles | 原版角度能力适配             |
-| 蒙版修补     | FLUX Fill Pro                 | 蒙版输入适配                   |
-| 视频         | Kling 2.5 Turbo Pro            | 原版视频页面，文生/图生         |
-| 音频         | Stable Audio Open             | 原版音频页面                   |
-| 3D 网格      | Hunyuan 3D 2.1 / V3 Text       | 原版 3D 选择器，图生/文生       |
-| 背景移除     | BiRefNet                      | 原版背景移除页面               |
-| 物体 Splat   | TripoSplat                    | 原版 3D 选择器                 |
-| 世界资产     | Hunyuan World                 | Proxy API；ZIP 不冒充 Marble 世界 |
-| 视频提示词   | Video Understanding           | Proxy API；尚未接入桌面专用流程 |
+| 能力         | fal 模型                                   | 列价（2026-10-07 fal 定价接口）     | 接入状态                                   |
+|--------------|--------------------------------------------|-------------------------------------|--------------------------------------------|
+| 文生图       | FLUX.1 Schnell / FLUX.1 Dev                | $0.003 / $0.025 每百万像素          | 原版图片页面；Dev 已真实验收               |
+| 图片生成编辑 | Nano Banana / Nano Banana 2 / Pro          | $0.0398 / $0.08 / $0.15 每张        | 原版图片、2D/3D 编辑流程；2 已真实验收     |
+| 图片生成编辑 | Seedream 4 / 4.5                           | $0.03 / $0.04 每张                  | 原版图片页面；4 已真实验收，4.5 仅 schema  |
+| 角度编辑     | Qwen Image Edit Multiple Angles            | $0.035 每百万像素                   | 原版角度能力                               |
+| 蒙版修补     | FLUX Fill Pro                              | $0.05 每百万像素                    | 蒙版输入                                   |
+| 视频         | Kling 2.5 Turbo Pro                        | $0.07 每秒                          | 原版视频页面，文生/图生，已真实验收        |
+| 视频         | Kling 2.6 Pro / Veo 3.1 / Veo 3.1 Fast     | $0.07 / $0.40 / $0.15 每秒          | 原版视频页面；仅 schema 核对，未付费验收   |
+| 视频提示词   | Video Prompt Generator                     | $0.001 每次                         | 视频提示框 Draft prompt 按钮               |
+| 音频         | Stable Audio Open / ElevenLabs Sound Effects | 按算力秒 / $0.002 每秒            | 原版音频页面；音效已真实验收               |
+| 3D 网格      | Hunyuan 3D 2.1 / V3 图生 / V3 文生          | $0.30 每次 / $0.015 每单位          | 原版 3D 选择器；V3 图生已真实验收          |
+| 背景移除     | BiRefNet                                   | 按算力秒                            | 原版背景移除页面                           |
+| 物体 Splat   | TripoSplat                                 | $0.05 每次                          | 原版 3D 世界页，文案注明为物体 PLY         |
+| 世界资产包   | Hunyuan World                              | $0.30 每次                          | 原版 3D 世界页，标签表单，结果为 ZIP 下载  |
 
-“适配”不等于所有桌面操作均通过端到端验收，具体证据见验收文档。fal 未覆盖的模型继续走原有官方/第三方路线，不能将 Midjourney、Sora、World Labs 等宣称为 fal 等价实现。
+“接入”不等于所有桌面操作均通过端到端验收，具体证据见验收文档。fal 未覆盖的模型继续走原有官方/第三方路线，不能将 Midjourney、Sora、World Labs 等宣称为 fal 等价实现。
+
+列价来自 fal 定价接口，由 `capabilities` 的 `price` 字段下发（`usd` 加 `unit`：image、megapixel、second、request、compute_second、unit）。桌面端据此在生成按钮和费用面板显示估算；按算力计费的模型只显示单价，不编造总额。最终以 fal 账单为准。
 
 模型清单位于 `src/models.mjs`，能力协议为 `/v1/proxy/capabilities`。客户端不能提交任意目标 URL；队列 URL 限制为 `https://queue.fal.run` 且禁止重定向。未知或不支持的非空参数明确报错。Nano Banana 的编辑器系统提示词为固定上下文前缀，不是官方的提示词增强服务。
 
