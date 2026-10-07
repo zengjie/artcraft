@@ -1,12 +1,6 @@
-// Shared model store: the single source of truth for the model dropdowns.
-//
-// Seeded synchronously from the frontend OVERLAY (`IMAGE_MODELS` / `VIDEO_MODELS`
-// in `@storyteller/model-list`) so the UI is never empty. On app boot,
-// `loadModelsFromBackend()` fetches the authoritative omni listing via the Tauri
-// commands and rebuilds the lists FROM that response (membership + order come
-// from the backend; the overlay only enriches UI metadata; backend models with
-// no overlay entry are built minimally so NEW models appear). If the fetch fails
-// the store keeps the overlay.
+// The Proxy listing controls model availability. Until it loads, selectors
+// remain empty rather than offering models the Proxy cannot serve. Frontend
+// overlays only enrich the returned models with display metadata.
 
 import { create } from "zustand";
 import {
@@ -31,8 +25,8 @@ export interface ModelsStoreState {
 }
 
 export const useModelsStore = create<ModelsStoreState>((set, get) => ({
-  imageModels: IMAGE_MODELS,
-  videoModels: VIDEO_MODELS,
+  imageModels: [],
+  videoModels: [],
   loaded: false,
   isLoading: false,
   loadModelsFromBackend: async () => {

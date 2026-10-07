@@ -25,7 +25,8 @@ use log::{error, info};
 use tauri::{AppHandle, State};
 
 #[tauri::command]
-pub async fn generate_image_command(request: OmniRequest, app: AppHandle) -> OmniResult {
+pub async fn generate_image_command(mut request: OmniRequest, app: AppHandle) -> OmniResult {
+  request.provider = Some(GenerationProvider::Artcraft);
   if request.uses_artcraft() && !request.uses_legacy_image_endpoint() {
     return omni::generate(request, Modality::Image, &app).await;
   }

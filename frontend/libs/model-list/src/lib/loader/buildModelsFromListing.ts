@@ -101,9 +101,8 @@ export const buildVideoModelsFromListing = (
 //   1. OFFERED by a provider in the response's `providers[]` (the backend's
 //      publish switch — `models[]` details also contain disabled entries and
 //      internal variants that must NOT surface), or
-//   2. any ENABLED `models[]` detail, including models added after this build, or
-//   3. a frontend-only overlay model the backend has never heard of
-//      (switch_x, inpaint models, …).
+//   2. any ENABLED `models[]` detail, including models added after this build.
+// Frontend overlays supply presentation only; the Proxy controls availability.
 // `models[]` details are the capability source either way (the enabled entry
 // wins when a model is detailed twice).
 const build = <T extends { tauriId: string }, L extends ListingModelBase>(
@@ -115,7 +114,6 @@ const build = <T extends { tauriId: string }, L extends ListingModelBase>(
   // Backend model ids and overlay `tauriId`s share the same identifier space
   // (the 2026-07 id migration retired all aliasing).
   const overlayByTauriId = new Map(overlay.map((m) => [m.tauriId, m]));
-  const knownTauriIds = new Set(listing.map((m) => m.model));
   const offeredTauriIds = new Set(offeredModelIds);
 
   // Capability lookup — prefer the enabled detail entry when duplicated.
@@ -151,12 +149,6 @@ const build = <T extends { tauriId: string }, L extends ListingModelBase>(
     result.push(
       merge({ model: tauriId } as L, tauriId, overlayByTauriId.get(tauriId)),
     );
-  }
-  // Append frontend-only models the backend has never heard of.
-  for (const m of overlay) {
-    if (!ADMIN_ONLY_MODELS.has(m.tauriId) && !knownTauriIds.has(m.tauriId) && !seenTauriIds.has(m.tauriId)) {
-      result.push(m);
-    }
   }
   return result;
 };
@@ -195,10 +187,8 @@ const mergedImageModel = (
     editingIsInpainting: o?.editingIsInpainting ?? false,
     canEditAngles: o?.canEditAngles ?? false,
 
-    // Desktop-native provider knowledge.
-    providers: ["midjourney_7", "midjourney_7_niji", "midjourney_8"].includes(tauriId)
-      ? [GenerationProvider.Artcraft, GenerationProvider.Midjourney]
-      : o?.getProviders(),
+    // All generation is authenticated and routed through the Proxy.
+    providers: [GenerationProvider.Artcraft],
 
     // Capabilities — served by the API, overlay only as a transitional
     // fallback where the backend config leaves a field unset.
@@ -254,7 +244,7 @@ const mergedVideoModel = (
     supportsSystemPrompt: o?.supportsSystemPrompt,
 
     // Desktop-native provider knowledge.
-    providers: o?.getProviders(),
+    providers: [GenerationProvider.Artcraft],
 
     // Capabilities — served by the API, overlay only as a transitional
     // fallback where the backend config leaves a field unset.

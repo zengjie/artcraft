@@ -8,6 +8,7 @@ const HTTPS_SCHEME: &str = "https";
 #[derive(Clone, Debug)]
 pub enum ApiHost {
   Storyteller,
+  Proxy { origin: url::Url },
   FakeYou,
   Localhost { port: u32 },
 }
@@ -15,6 +16,7 @@ pub enum ApiHost {
 impl ApiHost {
   pub fn to_api_hostname(&self) -> String {
     match self {
+      ApiHost::Proxy { origin } => origin[url::Position::BeforeHost..url::Position::AfterPort].to_string(),
       ApiHost::Storyteller => "api.storyteller.ai".to_string(),
       ApiHost::FakeYou => "api.fakeyou.com".to_string(),
       ApiHost::Localhost { port } => format!("localhost:{}", port),
@@ -23,6 +25,7 @@ impl ApiHost {
 
   pub fn to_api_hostname_and_scheme(&self) -> String {
     match self {
+      ApiHost::Proxy { origin } => origin.origin().ascii_serialization(),
       ApiHost::Storyteller => "https://api.storyteller.ai".to_string(),
       ApiHost::FakeYou => "https://api.fakeyou.com".to_string(),
       ApiHost::Localhost { port } => format!("http://localhost:{}", port),
@@ -32,6 +35,7 @@ impl ApiHost {
   /// The `Origin` the desktop client declares to this API.
   pub fn request_origin(&self) -> &'static str {
     match self {
+      ApiHost::Proxy { .. } => ARTCRAFT_DESKTOP_ORIGIN,
       ApiHost::Storyteller => ARTCRAFT_DESKTOP_ORIGIN,
       ApiHost::FakeYou => ARTCRAFT_DESKTOP_ORIGIN,
       ApiHost::Localhost { .. } => ARTCRAFT_DESKTOP_DEVELOPMENT_ORIGIN,
@@ -40,6 +44,7 @@ impl ApiHost {
 
   pub fn scheme(&self) -> &'static str {
     match self {
+      ApiHost::Proxy { origin } => if origin.scheme() == "http" { HTTP_SCHEME } else { HTTPS_SCHEME },
       ApiHost::Storyteller => HTTPS_SCHEME,
       ApiHost::FakeYou => HTTPS_SCHEME,
       ApiHost::Localhost { .. } => HTTP_SCHEME,

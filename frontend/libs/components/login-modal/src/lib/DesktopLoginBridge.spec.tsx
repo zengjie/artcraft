@@ -44,7 +44,7 @@ afterEach(() => {
 describe("desktop native login bridge integration", () => {
   it("creates through IPC and opens the native browser with the matching QR/code", async () => {
     render(<DesktopLoginBridge onSuccess={vi.fn()} />);
-    await start("Login with Website");
+    await start("使用飞书登录");
     expect(native).toHaveBeenCalledWith("storyteller_create_login_challenge_command");
     expect(native).toHaveBeenCalledWith("plugin:opener|open_url", { url: APPROVAL_URL });
     expect(screen.getByRole("img", { name: "Login QR" }).getAttribute("data-value")).toBe(APPROVAL_URL);
@@ -54,7 +54,7 @@ describe("desktop native login bridge integration", () => {
   it("polls with only a local handle and accepts the natively verified user without seeing credentials", async () => {
     const success = vi.fn();
     render(<DesktopLoginBridge onSuccess={success} />);
-    await start("Scan to Login");
+    await start("扫码登录");
     await tick(5000);
     expect(success).not.toHaveBeenCalled();
     outcome = { status: "redeemed", maybe_failure_type: null, maybe_user: USER };
@@ -71,7 +71,7 @@ describe("desktop native login bridge integration", () => {
     const success = vi.fn();
     outcome = { status: "failed", maybe_failure_type: "user_declined" };
     render(<DesktopLoginBridge onSuccess={success} />);
-    await start("Scan to Login");
+    await start("扫码登录");
     await tick(5000);
     expect(screen.getByText("Login was declined on the website.")).toBeTruthy();
     expect(success).not.toHaveBeenCalled();
@@ -82,7 +82,7 @@ describe("desktop native login bridge integration", () => {
   it("expires locally and cancels the native attempt without creating another", async () => {
     expiresIn = 5000;
     render(<DesktopLoginBridge onSuccess={vi.fn()} />);
-    await start("Scan to Login");
+    await start("扫码登录");
     await tick(5000);
     expect(screen.getByText("Login request expired. Start a new request.")).toBeTruthy();
     expect(calls("storyteller_create_login_challenge_command")).toBe(1);
@@ -92,7 +92,7 @@ describe("desktop native login bridge integration", () => {
 
   it("backs off a native network failure and retries the same local handle", async () => {
     render(<DesktopLoginBridge onSuccess={vi.fn()} />);
-    await start("Scan to Login");
+    await start("扫码登录");
     native.mockRejectedValueOnce({ message: "Disconnected", status: null, retryable: true });
     await tick(5000);
     expect(screen.getByText("Connection interrupted. Retrying…")).toBeTruthy();
@@ -106,7 +106,7 @@ describe("desktop native login bridge integration", () => {
     let resolve: (value: unknown) => void = () => {};
     const success = vi.fn();
     const view = render(<DesktopLoginBridge onSuccess={success} />);
-    await start("Scan to Login");
+    await start("扫码登录");
     native.mockImplementationOnce(() => new Promise((done) => { resolve = done; }));
     await tick(5000);
     view.unmount();
@@ -119,7 +119,7 @@ describe("desktop native login bridge integration", () => {
     let resolve: (value: unknown) => void = () => {};
     const success = vi.fn();
     render(<DesktopLoginBridge onSuccess={success} />);
-    await start("Scan to Login");
+    await start("扫码登录");
     native.mockImplementationOnce(() => new Promise((done) => { resolve = done; }));
     await tick(5000);
     await start("Back");
@@ -130,7 +130,7 @@ describe("desktop native login bridge integration", () => {
     await tick(30_000);
     expect(calls("storyteller_poll_login_challenge_command")).toBe(1);
 
-    await start("Scan to Login");
+    await start("扫码登录");
     expect(screen.getByRole("img", { name: "Login QR" })).toBeTruthy();
     outcome = { status: "redeemed", maybe_user: USER };
     await tick(5000);
@@ -140,14 +140,14 @@ describe("desktop native login bridge integration", () => {
   it("fails closed on a future status", async () => {
     outcome = { status: "future_state", maybe_user: USER };
     render(<DesktopLoginBridge onSuccess={vi.fn()} />);
-    await start("Scan to Login");
+    await start("扫码登录");
     await tick(5000);
     expect(screen.getByText("This login request could not be completed. Start a new request.")).toBeTruthy();
   });
 
   it("shows the native host/status diagnostic and stops on terminal HTTP errors", async () => {
     render(<DesktopLoginBridge onSuccess={vi.fn()} />);
-    await start("Scan to Login");
+    await start("扫码登录");
     native.mockRejectedValueOnce({ message: "http://localhost:12345: Login server rejected the request (HTTP 401)", status: 401, retryable: false });
     await tick(5000);
     expect(screen.getByText(/localhost:12345.*401/)).toBeTruthy();

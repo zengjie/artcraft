@@ -1,3 +1,12 @@
+# ArtCraft · fal.ai + 飞书
+
+本 fork 使用独立 Proxy 接入 fal.ai，并通过飞书登录。
+
+- [飞书登录配置](docs/feishu-login.md)
+- [Proxy 启动与支持范围](proxy/README.md)
+
+---
+
 <h1 align="center">ArtCraft</h1>
 <p align="center"><strong>The IDE for artists.</strong></p>
 

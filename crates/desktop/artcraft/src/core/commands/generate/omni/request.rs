@@ -27,8 +27,8 @@ pub enum Modality {
 
 impl OmniRequest {
   pub fn uses_artcraft(&self) -> bool {
-    // Native Grok is deliberately disabled, including calls from old UI state.
-    self.model().is_some_and(|model| model.starts_with("grok_")) || matches!(self.provider, None | Some(GenerationProvider::Artcraft | GenerationProvider::Grok))
+    // All modalities use the authenticated fal Proxy, including saved provider preferences.
+    true
   }
 
   pub fn model(&self) -> Option<&str> {
@@ -217,10 +217,10 @@ mod midjourney_tests {
   use super::*;
 
   #[test]
-  fn versioned_models_respect_the_explicit_provider() {
+  fn saved_provider_preferences_still_route_through_proxy() {
     for model in ["midjourney_7", "midjourney_7_niji", "midjourney_8"] {
       let direct: OmniRequest = serde_json::from_value(serde_json::json!({"model": model, "provider": "midjourney"})).unwrap();
-      assert!(!direct.uses_artcraft());
+      assert!(direct.uses_artcraft());
       let artcraft: OmniRequest = serde_json::from_value(serde_json::json!({"model": model, "provider": "artcraft"})).unwrap();
       assert!(artcraft.uses_artcraft());
       assert!(!artcraft.uses_legacy_image_endpoint());

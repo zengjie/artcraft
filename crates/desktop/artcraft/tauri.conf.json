@@ -32,6 +32,8 @@
           "tauri://localhost"
         ],
         "connect-src": [
+          "http://localhost:12345",
+          "https://*.fal.media",
           "'self'",
           "'unsafe-eval'",
           "'unsafe-inline'",
