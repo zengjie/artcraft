@@ -31,7 +31,7 @@ npm start
 | 视频         | Kling 2.5 Turbo Pro                        | $0.07 每秒                          | 原版视频页面，文生/图生，已真实验收        |
 | 视频         | Kling 2.6 Pro / Veo 3.1 / Veo 3.1 Fast     | $0.07 / $0.40 / $0.15 每秒          | 原版视频页面；仅 schema 核对，未付费验收   |
 | 视频         | Seedance 1.5 Pro / 1.0 Lite                | $1.20 / $1.00 每百万 token          | 原版视频页面；1.0 Lite 已真实验收          |
-| 视频         | Seedance 2.0 (US) / 2.0 Fast / 2.5 (US)    | $16.8 / $11.2 / $25.68 每百万 token | 原版视频页面，支持首尾帧与多图参考；2.0 US 已真实验收 |
+| 视频         | Seedance 2.0 / 2.0 Fast（企业版）/ 2.5      | $14 / $11.2 / $21.4 每百万 token    | 原版视频页面，支持首尾帧与多图参考；2.0 企业版已真实验收 |
 | 视频提示词   | Video Prompt Generator                     | $0.001 每次                         | 视频提示框 Draft prompt 按钮               |
 | 音频         | Stable Audio Open / ElevenLabs Sound Effects | 按算力秒 / $0.002 每秒            | 原版音频页面；音效已真实验收               |
 | 3D 网格      | Hunyuan 3D 2.1 / V3 图生 / V3 文生          | $0.30 每次 / $0.015 每单位          | 原版 3D 选择器；V3 图生已真实验收          |
@@ -39,7 +39,7 @@ npm start
 | 物体 Splat   | TripoSplat                                 | $0.05 每次                          | 原版 3D 世界页，文案注明为物体 PLY         |
 | 世界资产包   | Hunyuan World                              | $0.30 每次                          | 原版 3D 世界页，标签表单，结果为 ZIP 下载  |
 
-“接入”不等于所有桌面操作均通过端到端验收，具体证据见验收文档。fal 未覆盖的模型继续走原有官方/第三方路线，不能将 Midjourney、Sora、World Labs 等宣称为 fal 等价实现。Seedance 2.x 在 fal 上位于 `bytedance/` 命名空间（而非 `fal-ai/`），按 1,000 token 计价，这里折算为每百万 token。2.0 与 2.5 使用团队账号可用的 US 托管版本（`.../us/...`，合规审查策略与默认版不同）；2.0 Fast 没有 US 版本。官方通道未登录时界面会明确提示登录 ArtCraft。
+“接入”不等于所有桌面操作均通过端到端验收，具体证据见验收文档。fal 未覆盖的模型继续走原有官方/第三方路线，不能将 Midjourney、Sora、World Labs 等宣称为 fal 等价实现。Seedance 2.x 在 fal 上位于 `bytedance/` 命名空间（而非 `fal-ai/`），按 1,000 token 计价，这里折算为每百万 token。2.0 与 2.0 Fast 使用团队账号可用的企业版端点（`bytedance/seedance-2.0/enterprise/v2/...`，参数与列价同公开版，合规审查策略不同）；2.5 目前没有企业版，使用公开版。同型号模型存在企业版时优先企业版。官方通道未登录时界面会明确提示登录 ArtCraft。
 
 列价来自 fal 定价接口，由 `capabilities` 的 `price` 字段下发（`usd` 加 `unit`：image、megapixel、second、request、compute_second、megatoken、unit）。桌面端据此在生成按钮和费用面板显示估算；按算力计费的模型只显示单价，不编造总额。最终以 fal 账单为准。
 

@@ -47,7 +47,7 @@ Nano Banana 编辑器系统提示词采用固定的画布/3D 场景上下文前�
 
 ## 验收记录
 
-2026-10-07 目录扩展后新增 5 项真实验收，全部成功并核对文件头：FLUX.1 Dev（JPEG）、Seedream 4 文生图（JPEG）、Nano Banana 2 图像编辑（PNG）、ElevenLabs 音效（MP3）、Hunyuan 3D V3 图生网格（GLB）。累计 API 预留 US$12.88，加桌面 Nano 单张 US$0.10、浏览器链路 Draft prompt US$0.01 与 Hunyuan World US$0.30，共 US$13.29。Seedance 1.0 Lite（2 秒 480p 文生视频）与 Seedance 2.0 US（4 秒 480p 无音频文生视频，验证团队账号对 US 托管版的访问权限）已真实验收；Seedance 2.5（US 托管版）、2.0 Fast（含首尾帧与最多 9 张参考图）、Seedance 1.5 Pro、Kling 2.6 Pro、Veo 3.1、Veo 3.1 Fast、Seedream 4.5、Nano Banana Pro 仅完成 fal schema 与参数映射单元测试，未付费真实验收；Veo 单次 4 到 8 秒的列价为 US$0.60 到 US$3.20，默认不选中。
+2026-10-07 目录扩展后新增 5 项真实验收，全部成功并核对文件头：FLUX.1 Dev（JPEG）、Seedream 4 文生图（JPEG）、Nano Banana 2 图像编辑（PNG）、ElevenLabs 音效（MP3）、Hunyuan 3D V3 图生网格（GLB）。累计 API 预留 US$13.18，加桌面 Nano 单张 US$0.10、浏览器链路 Draft prompt US$0.01 与 Hunyuan World US$0.30，共 US$13.59。Seedance 1.0 Lite（2 秒 480p 文生视频）、Seedance 2.0 US（4 秒 480p 无音频文生视频）与 Seedance 2.0 Fast 企业版（`enterprise/v2`，4 秒 480p 无音频，验证团队账号的企业版访问权限）已真实验收；Seedance 2.5（公开版，暂无企业版）、2.0 企业版（含首尾帧与最多 9 张参考图）、Seedance 1.5 Pro、Kling 2.6 Pro、Veo 3.1、Veo 3.1 Fast、Seedream 4.5、Nano Banana Pro 仅完成 fal schema 与参数映射单元测试，未付费真实验收；Veo 单次 4 到 8 秒的列价为 US$0.60 到 US$3.20，默认不选中。
 
 此前真实 fal API 验收 14/14 成功：FLUX 文生图、Nano 文生图/图像编辑、Qwen 角度、Fill 蒙版、Kling 文生/图生视频、Hunyuan 图生/文生网格、背景移除、音频、TripoSplat、Hunyuan World、视频提示词。13 个文件输出读取成功并核对 JPEG/PNG/MP4/GLB/WAV/PLY/ZIP 文件头，另一个返回文本。
 
