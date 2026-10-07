@@ -4,6 +4,11 @@ import { join } from 'node:path';
 
 export class Media {
   constructor(store, config) { this.store = store; this.config = config; }
+  // Records written before 2026-10-07 carry 'unlisted', which the desktop's
+  // Visibility enum rejects; serve them as 'hidden' without rewriting the store.
+  normalize(item) {
+    return item.creator_set_visibility === 'unlisted' ? { ...item, creator_set_visibility: 'hidden' } : item;
+  }
   add(owner, modality, file, metadata = {}) {
     const id = `mf_fpx_${token()}`;
     const url = new URL(file.url);
@@ -14,7 +19,7 @@ export class Media {
       media_links: { cdn_url: file.url, maybe_thumbnail_template: modality === 'image' ? file.url : null, maybe_video_previews: null },
       cover_image: { maybe_links: null, default_cover: { image_index: 0, color_index: 0 } },
       maybe_engine_category: modality === 'mesh' ? 'object' : null,
-      creator_set_visibility: 'unlisted', is_user_upload: false, is_intermediate_system_file: false,
+      creator_set_visibility: 'hidden', is_user_upload: false, is_intermediate_system_file: false,
       used_face_detailer: false, used_upscaler: false, is_emulated_media_file: false, is_featured: false,
       stats: { positive_rating_count: 0, bookmark_count: 0 },
       created_at: new Date().toISOString(), updated_at: new Date().toISOString(), ...metadata,

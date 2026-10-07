@@ -72,7 +72,7 @@ export function createProxy(config, { store = new Store(join(config.dataDir, 'pr
       if (req.method === 'GET' && path.startsWith('/v1/media_files/file/')) {
         const record = store.get('media', path.split('/').at(-1));
         if (!record) fail(404, 'Media not found');
-        return json(res, { success: true, media_file: record.item });
+        return json(res, { success: true, media_file: media.normalize(record.item) });
       }
       const session = auth.require(req);
       const owner = session.user.user_token;
@@ -119,7 +119,7 @@ export function createProxy(config, { store = new Store(join(config.dataDir, 'pr
         return json(res, { success: true });
       }
       if (req.method === 'GET' && path.startsWith('/v1/media_files/')) {
-        let items = store.list('media').filter(m => m.owner === owner).map(m => m.item);
+        let items = store.list('media').filter(m => m.owner === owner).map(m => media.normalize(m.item));
         const batch = path.match(/^\/v1\/media_files\/(?:batch|batch_gen_redux)\/(.+)$/);
         if (batch) items = items.filter(m => m.maybe_batch_token === batch[1]);
         else if (path === '/v1/media_files/batch') {

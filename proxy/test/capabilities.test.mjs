@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { buildInput, MODELS } from '../src/models.mjs';
 const MODEL = id => MODELS.find(m => m.model === id);
 import { capabilities } from '../src/capabilities.mjs';
+import { Media } from '../src/media.mjs';
 const resolve = id => { assert.ok(['image', 'mask'].includes(id)); return `https://assets.example/${id}.png`; };
 
 test('extension protocol names actual provider and never claims unsupported capabilities', () => {
@@ -140,4 +141,22 @@ test('Seedance 2.x uses the bytedance namespace, reference-to-video and per-toke
   assert.throws(() => buildInput('video', { model: 'seedance_2p0', prompt: 'waves', reference_image_media_tokens: ['image'], image_media_token: 'image' }, resolve), /either a start frame/);
   assert.throws(() => buildInput('video', { model: 'seedance_2p5', prompt: 'waves', duration_seconds: 31 }, resolve), /Duration must be one of/);
   assert.equal(MODEL('seedance_2p5').price.unit, 'megatoken');
+});
+
+// The desktop decodes batch media with the upstream Rust enums. A value outside
+// these sets silently drops the editor completion event (canvas placeholders
+// then never resolve), so pin the wire values here.
+test('media records only use enum values the desktop can decode', () => {
+  const visibilities = new Set(['public', 'hidden', 'private']);
+  const classes = new Set(['unknown', 'audio', 'image', 'video', 'dimensional', 'mesh', 'splat', 'project']);
+  const types = new Set(['audio', 'image', 'video', 'bvh', 'fbx', 'obj', 'ply', 'glb', 'gltf', 'spz', 'jpg', 'png', 'gif', 'mp4', 'wav', 'mp3', 'webp', 'webm', 'mov', 'opus', 'ogg', 'aac', 'm4a', 'flac', 'json']);
+  const records = new Map();
+  const store = { put: (_kind, id, record) => records.set(id, record), get: id => records.get(id) };
+  const media = new Media(store, { origin: 'http://localhost:12345' });
+  for (const [modality, file] of [['image', { url: 'https://cdn.example/a.png', content_type: 'image/png' }], ['video', { url: 'https://cdn.example/a.mp4' }], ['audio', { url: 'https://cdn.example/a.mp3', content_type: 'audio/mpeg' }], ['mesh', { url: 'https://cdn.example/a.glb' }], ['splat', { url: 'https://cdn.example/a.ply' }]]) {
+    const item = media.add('user', modality, file, { origin_category: 'inference' });
+    assert.ok(visibilities.has(item.creator_set_visibility), `${modality} visibility ${item.creator_set_visibility}`);
+    assert.ok(classes.has(item.media_class), `${modality} class ${item.media_class}`);
+    assert.ok(types.has(item.media_type), `${modality} type ${item.media_type}`);
+  }
 });
