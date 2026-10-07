@@ -50,6 +50,17 @@
           "ipc://localhost",
           "tauri://localhost"
         ],
+        "media-src": [
+          "'self'",
+          "blob:",
+          "data:",
+          "asset:",
+          "https://asset.localhost",
+          "http://localhost:12345",
+          "https://*.fal.media",
+          "https://*.fakeyou.com",
+          "https://*.storyteller.ai"
+        ],
         "font-src": "*",
         "img-src": [
           "",
