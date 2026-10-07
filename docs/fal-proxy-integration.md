@@ -45,6 +45,10 @@ fal 元素沿用 ArtCraft 的粗野主义体系，不引入新色与新字体。
 
 Nano Banana 编辑器系统提示词采用固定的画布/3D 场景上下文前缀，不等价于官方增强模型。Hunyuan World 返回 ZIP，TripoSplat 返回物体 PLY；都不冒充 World Labs Marble 的可探索世界。世界 ZIP 和视频提示词目前仅 Proxy API 已接通，不宣称桌面世界编辑流程完成。
 
+## 已知坑
+
+- Proxy 返回的素材字段必须落在桌面端 Rust 枚举的取值内（`creator_set_visibility` 只能是 public、hidden、private；`media_class`、`media_type` 见 `crates/schema/public/enums`）。2026-10-07 之前的记录写成 `unlisted`，导致画布与编辑器的 `TextToImageGenerationCompleteEvent` 在解析批次素材时失败并被静默吞掉：任务在本地库已标记完成、历史里有图，但画布占位一直显示 pending。现在 Proxy 写入 `hidden`，读取时把旧记录归一化，`proxy/test/capabilities.test.mjs` 固定了合法取值。
+
 ## 验收记录
 
 2026-10-07 目录扩展后新增 5 项真实验收，全部成功并核对文件头：FLUX.1 Dev（JPEG）、Seedream 4 文生图（JPEG）、Nano Banana 2 图像编辑（PNG）、ElevenLabs 音效（MP3）、Hunyuan 3D V3 图生网格（GLB）。累计 API 预留 US$13.18，加桌面 Nano 单张 US$0.10、浏览器链路 Draft prompt US$0.01 与 Hunyuan World US$0.30，共 US$13.59。Seedance 1.0 Lite（2 秒 480p 文生视频）、Seedance 2.0 US（4 秒 480p 无音频文生视频）与 Seedance 2.0 Fast 企业版（`enterprise/v2`，4 秒 480p 无音频，验证团队账号的企业版访问权限）已真实验收；Seedance 2.5（公开版，暂无企业版）、2.0 企业版（含首尾帧与最多 9 张参考图）、Seedance 1.5 Pro、Kling 2.6 Pro、Veo 3.1、Veo 3.1 Fast、Seedream 4.5、Nano Banana Pro 仅完成 fal schema 与参数映射单元测试，未付费真实验收；Veo 单次 4 到 8 秒的列价为 US$0.60 到 US$3.20，默认不选中。
