@@ -2,10 +2,12 @@ import { Button, ButtonProps } from "./button";
 import { CoinsIcon } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { Tooltip } from "@storyteller/ui-tooltip";
+import type { ReactNode } from "react";
 
 interface GenerateButtonProps extends ButtonProps {
   credits?: number | null;
-  costLabel?: string;
+  /** Replaces the credit readout, e.g. a provider's list-price tag. */
+  costLabel?: ReactNode;
 }
 
 export const GenerateButton = ({
@@ -27,7 +29,11 @@ export const GenerateButton = ({
     >
       <span className="truncate">{children}</span>
 
-      {costLabel && <span className="text-xs opacity-80">{costLabel}</span>}
+      {costLabel && (
+        <span className={twMerge("flex items-center opacity-80 group-hover:opacity-100 transition-opacity", disabled && "opacity-50")}>
+          {costLabel}
+        </span>
+      )}
       {!costLabel && credits != null && (
         <Tooltip
           content={`${credits} credit${credits !== 1 ? "s" : ""} cost`}

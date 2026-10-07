@@ -1,4 +1,5 @@
 import { GenerateAudio, EstimateAudioCost } from "@storyteller/tauri-api";
+import { isProxyModel } from "@storyteller/fal-proxy";
 import type { OmniGenAudioRequest } from "@storyteller/api";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PromptBoxAudio, usePromptAudioStore } from "@storyteller/ui-promptbox";
@@ -26,8 +27,10 @@ import { useDesktopUsername } from "~/components/generation-feed/useDesktopUsern
 import { DesktopCreatePageShell } from "~/components/generation-feed/DesktopCreatePageShell";
 import { DesktopGenerationGallery } from "~/components/generation-feed/DesktopGenerationGallery";
 
-const generateAudio = async (request: OmniGenAudioRequest) => (await GenerateAudio({ ...request, provider: request.model === "stable_audio" ? "fal_proxy" : undefined } as any)).payload;
-const estimateAudio = async (request: OmniGenAudioRequest) => (await EstimateAudioCost({ ...request, provider: request.model === "stable_audio" ? "fal_proxy" : undefined } as any)).payload;
+// fal audio models route to the Proxy; every other model keeps the official path.
+const audioProvider = (model: string) => (isProxyModel(model, "audio") ? "fal_proxy" : undefined);
+const generateAudio = async (request: OmniGenAudioRequest) => (await GenerateAudio({ ...request, provider: audioProvider(request.model) } as any)).payload;
+const estimateAudio = async (request: OmniGenAudioRequest) => (await EstimateAudioCost({ ...request, provider: audioProvider(request.model) } as any)).payload;
 
 const AUDIO_FILTER = [FilterMediaClasses.AUDIO];
 
@@ -44,7 +47,7 @@ const CreateAudio = () => {
   const selectedModel = useMemo(
     () =>
       models.find((m) => m.model === selectedModelId) ??
-      models.find((m) => m.model === "stable_audio") ??
+      models.find((m) => isProxyModel(m.model, "audio")) ??
       models.find((m) => m.model === "suno_music") ??
       models[0],
     [models, selectedModelId],

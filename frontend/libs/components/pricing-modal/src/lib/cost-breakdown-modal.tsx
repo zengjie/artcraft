@@ -29,6 +29,7 @@ import {
   usePromptEditStore,
 } from "@storyteller/ui-promptbox";
 import { Model } from "@storyteller/model-list";
+import { estimateProxyCost, formatUsd, useProxyModel } from "@storyteller/fal-proxy";
 import { useCurrency } from "./use-currency";
 import { useVideoCostEstimate } from "./useVideoCostEstimate";
 import { useImageCostEstimate } from "./useImageCostEstimate";
@@ -209,6 +210,7 @@ export function CostBreakdownModal({ activeTabId }: CostBreakdownModalProps) {
   };
 
   const storeData = getStoreData();
+  const videoDuration = usePromptVideoStore((s) => s.duration);
 
   // Pages that use a live backend estimate instead of a local calculation
   const LIVE_ESTIMATE_PAGES = new Set<ModelPage>([
@@ -355,10 +357,12 @@ export function CostBreakdownModal({ activeTabId }: CostBreakdownModalProps) {
         )}
 
         {selectedProvider === "fal_proxy" ? (
-          <div className="bg-ui-sunken rounded-none p-3 border border-ui-panel-border space-y-2">
-            <p className="font-medium">fal · 按用量计费</p>
-            <p className="text-base-fg/60">由团队 fal 账户结算，不消耗 ArtCraft 积分。当前没有可靠的实时金额预估，请以 fal 账单为准。</p>
-          </div>
+          <FalCostBreakdown
+            model={selectedModel?.tauriId}
+            count={storeData.generationCount || 1}
+            seconds={activePage === ModelPage.ImageToVideo ? videoDuration : undefined}
+            resolution={storeData.resolution}
+          />
         ) : hasCostData ? (
           <>
             {/* Generation Details */}
@@ -442,5 +446,81 @@ export function CostBreakdownModal({ activeTabId }: CostBreakdownModalProps) {
         )}
       </div>
     </Modal>
+  );
+}
+
+interface FalCostBreakdownProps {
+  model?: string;
+  count: number;
+  seconds?: number | null;
+  resolution?: string | null;
+}
+
+// fal has no live estimate endpoint; show its published list price and the
+// quantity it multiplies, and say plainly who pays.
+function FalCostBreakdown({ model, count, seconds, resolution }: FalCostBreakdownProps) {
+  const cap = useProxyModel(model);
+  const estimate = estimateProxyCost(cap?.price, { count, seconds: seconds ?? undefined });
+  const unitLabel: Record<string, string> = {
+    image: "per image",
+    megapixel: "per megapixel",
+    second: "per second",
+    request: "per generation",
+    compute_second: "per compute second",
+    unit: "per unit",
+  };
+  return (
+    <>
+      <div className="space-y-1.5">
+        {resolution && (
+          <div className="flex justify-between items-center">
+            <span className="text-base-fg/60">Resolution</span>
+            <span className="text-base-fg font-medium uppercase">{resolution}</span>
+          </div>
+        )}
+        {seconds != null && seconds > 0 && (
+          <div className="flex justify-between items-center">
+            <span className="text-base-fg/60">Duration</span>
+            <span className="text-base-fg font-medium">{seconds}s</span>
+          </div>
+        )}
+        {count > 1 && (
+          <div className="flex justify-between items-center">
+            <span className="text-base-fg/60">Outputs</span>
+            <span className="text-base-fg font-medium">{count}</span>
+          </div>
+        )}
+        <div className="flex justify-between items-center">
+          <span className="text-base-fg/60">Provider</span>
+          <span className="text-base-fg font-medium">fal (team)</span>
+        </div>
+        {estimate && (
+          <div className="flex justify-between items-center">
+            <span className="text-base-fg/60">List price</span>
+            <span className="text-base-fg font-medium tabular-nums">
+              {formatUsd(estimate.unitUsd)} {unitLabel[estimate.unit]}
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="bg-ui-sunken rounded-none p-3 border border-ui-panel-border space-y-2.5">
+        <div>
+          <div className="font-mono text-[10px] text-base-fg/50 uppercase tracking-[0.12em] mb-0.5">
+            Estimate
+          </div>
+          <div className="font-display text-lg font-medium tracking-[-0.02em] text-base-fg tabular-nums">
+            {estimate?.usd != null ? formatUsd(estimate.usd) : "Usage-based"}
+          </div>
+        </div>
+        <p className="text-base-fg/60 leading-relaxed">
+          {estimate?.usd != null
+            ? "Based on fal's published list price for this model. "
+            : estimate
+              ? "fal bills this model by actual usage, so the total is only known after the run. "
+              : "fal has not published a list price for this model. "}
+          Charged to the team fal account, not ArtCraft credits. The fal invoice is the final bill.
+        </p>
+      </div>
+    </>
   );
 }

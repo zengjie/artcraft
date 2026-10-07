@@ -1,6 +1,6 @@
 import { ArrowUpIcon, CoinsIcon, LoaderCircleIcon } from "lucide-react";
 import { DynamicIcon } from "@storyteller/icons";
-import { ButtonHTMLAttributes } from "react";
+import { ButtonHTMLAttributes, ReactNode } from "react";
 import { twMerge } from "tailwind-merge";
 import { Tooltip } from "@storyteller/ui-tooltip";
 
@@ -9,7 +9,8 @@ interface GenerateIconButtonProps extends Omit<
   "children"
 > {
   credits?: number | null;
-  costLabel?: string;
+  /** Replaces the credit readout, e.g. a provider's list-price tag. */
+  costLabel?: ReactNode;
   loading?: boolean;
 }
 
@@ -30,7 +31,9 @@ export const GenerateIconButton = ({
 
   return (
     <div className={twMerge("flex shrink-0 items-center gap-2.5", className)}>
-      {costLabel && <span className="text-[13px] text-base-fg/80" title="由团队 fal 账户按实际用量计费">{costLabel}</span>}
+      {costLabel && (
+        <span className={twMerge("flex items-center ms-1.5 transition-opacity", isDisabled && "opacity-50")}>{costLabel}</span>
+      )}
       {!costLabel && credits != null && (
         <Tooltip
           content={`${credits} credit${credits !== 1 ? "s" : ""} cost`}

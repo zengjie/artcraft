@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildInput } from '../src/models.mjs';
+import { buildInput, MODELS } from '../src/models.mjs';
+const MODEL = id => MODELS.find(m => m.model === id);
 import { capabilities } from '../src/capabilities.mjs';
 const resolve = id => { assert.ok(['image', 'mask'].includes(id)); return `https://assets.example/${id}.png`; };
 
@@ -66,4 +67,49 @@ test('Splat, world and prompt models keep distinct input and output semantics', 
   assert.deepEqual(buildInput('world', world, resolve).input, { image_url: 'https://assets.example/image.png', labels_fg1: 'tree', labels_fg2: 'mountain', classes: 'landscape' });
   assert.throws(() => buildInput('world', { ...world, classes: '' }, resolve), /classes/);
   assert.deepEqual(buildInput('text', { model: 'video_prompt', prompt: 'a boat' }, resolve).input, { input_concept: 'a boat', model: 'google/gemini-2.5-flash-lite', prompt_length: 'Medium' });
+});
+
+test('every model advertises a fal list price with a known unit', () => {
+  const units = new Set(['image', 'megapixel', 'second', 'request', 'compute_second', 'unit']);
+  for (const model of capabilities().models) {
+    assert.ok(model.price && model.price.usd > 0 && units.has(model.price.unit), model.model);
+  }
+});
+
+test('FLUX Dev, Seedream and Nano Banana variants map sizes, resolutions and edit endpoints', () => {
+  assert.deepEqual(buildInput('image', { model: 'flux_1_dev', prompt: 'fox', aspect_ratio: 'wide_sixteen_by_nine', image_batch_count: 2 }, resolve), { model: MODEL('flux_1_dev'), endpoint: 'fal-ai/flux/dev', input: { prompt: 'fox', num_images: 2, image_size: 'landscape_16_9' } });
+  const text = buildInput('image', { model: 'seedream_4', prompt: 'fox', aspect_ratio: 'tall_nine_by_sixteen' }, resolve);
+  assert.equal(text.endpoint, 'fal-ai/bytedance/seedream/v4/text-to-image');
+  assert.deepEqual(text.input, { prompt: 'fox', num_images: 1, image_size: { width: 1152, height: 2048 } });
+  const edit = buildInput('image', { model: 'seedream_4p5', prompt: 'make it night', image_media_tokens: ['image'] }, resolve);
+  assert.equal(edit.endpoint, 'fal-ai/bytedance/seedream/v4.5/edit');
+  assert.deepEqual(edit.input.image_urls, ['https://assets.example/image.png']);
+  const pro = buildInput('image', { model: 'nano_banana_pro', prompt: 'fox', resolution: 'two_k', image_media_tokens: ['image'] }, resolve);
+  assert.equal(pro.endpoint, 'fal-ai/nano-banana-pro/edit');
+  assert.equal(pro.input.resolution, '2K');
+  assert.throws(() => buildInput('image', { model: 'nano_banana_pro', prompt: 'fox', resolution: 'half_k' }, resolve), /Unsupported resolution/);
+  assert.throws(() => buildInput('image', { model: 'nano_banana', prompt: 'fox', resolution: 'one_k' }, resolve), /resolution/);
+  assert.throws(() => buildInput('image', { model: 'nano_banana_pro', prompt: 'fox', image_media_tokens: ['a', 'b', 'c', 'd', 'e'] }, resolve), /at most 4/);
+});
+
+test('Kling 2.6 and Veo 3.1 keep provider-specific keyframe, audio and duration contracts', () => {
+  const kling = buildInput('video', { model: 'kling_2p6_pro', prompt: 'waves', start_frame_image_media_token: 'image', end_frame_image_media_token: 'image', generate_audio: true, duration_seconds: 10 }, resolve);
+  assert.equal(kling.endpoint, 'fal-ai/kling-video/v2.6/pro/image-to-video');
+  assert.deepEqual(kling.input, { prompt: 'waves', duration: '10', generate_audio: true, start_image_url: 'https://assets.example/image.png', end_image_url: 'https://assets.example/image.png' });
+  assert.throws(() => buildInput('video', { model: 'kling_2p5_turbo_pro', prompt: 'waves', generate_audio: true }, resolve), /does not generate audio/);
+  const veo = buildInput('video', { model: 'veo_3p1_fast', prompt: 'waves', duration_seconds: 6, resolution: 'ten_eighty_p', aspect_ratio: 'tall_nine_by_sixteen' }, resolve);
+  assert.equal(veo.endpoint, 'fal-ai/veo3.1/fast');
+  assert.deepEqual(veo.input, { prompt: 'waves', duration: '6s', generate_audio: false, resolution: '1080p', aspect_ratio: '9:16' });
+  const veoImage = buildInput('video', { model: 'veo_3p1', prompt: 'waves', image_media_token: 'image' }, resolve);
+  assert.equal(veoImage.endpoint, 'fal-ai/veo3.1/image-to-video');
+  assert.deepEqual(veoImage.input, { prompt: 'waves', duration: '8s', generate_audio: false, resolution: '720p', image_url: 'https://assets.example/image.png', aspect_ratio: 'auto' });
+  assert.throws(() => buildInput('video', { model: 'veo_3p1', prompt: 'waves', duration_seconds: 5 }, resolve), /Duration must be one of 4, 6, 8/);
+  assert.throws(() => buildInput('video', { model: 'veo_3p1', prompt: 'waves', end_frame_image_media_token: 'image', image_media_token: 'image' }, resolve), /end frame/);
+});
+
+test('Hunyuan 3D V3 image and ElevenLabs sound effects use their own fields', () => {
+  assert.deepEqual(buildInput('mesh', { model: 'hunyuan_3d_3', image_media_tokens: ['image'], enable_texture: false }, resolve).input, { input_image_url: 'https://assets.example/image.png', generate_type: 'Geometry', enable_pbr: false });
+  assert.deepEqual(buildInput('audio', { model: 'elevenlabs_sfx', prompt: 'door creak', duration_seconds: 3 }, resolve).input, { text: 'door creak', duration_seconds: 3 });
+  assert.throws(() => buildInput('audio', { model: 'elevenlabs_sfx', prompt: 'door creak', duration_seconds: 60 }, resolve), /0.5–22/);
+  assert.throws(() => buildInput('audio', { model: 'stable_audio', prompt: 'rain', duration_seconds: 3 }, resolve), /Unsupported parameter/);
 });

@@ -14,6 +14,10 @@ export type ImageTo3DWorldResult = {
   modelUrl?: string;
   mediaToken?: string;
   coverImageUploaded?: boolean;
+  /** Downloadable archive for providers that return a file bundle (ZIP)
+   * instead of a splat the viewer can open. */
+  bundleUrl?: string;
+  bundleLabel?: string;
 };
 
 export const worldCoverImageCache = new Map<string, string>();
@@ -36,6 +40,12 @@ type ImageTo3DWorldState = {
     modelUrl: string,
     mediaToken: string,
     maybeSubscriberId?: string,
+  ) => void;
+  completeBundle: (
+    subscriberId: string,
+    bundleUrl: string,
+    mediaToken: string,
+    bundleLabel: string,
   ) => void;
   uploadCoverFromPreview: (mediaToken: string) => Promise<void>;
   failGeneration: (subscriberId: string) => void;
@@ -116,6 +126,15 @@ export const useImageTo3DWorldStore = create<ImageTo3DWorldState>(
 
         return { results };
       });
+    },
+    completeBundle: (subscriberId, bundleUrl, mediaToken, bundleLabel) => {
+      set((s) => ({
+        results: s.results.map((r) =>
+          r.subscriberId === subscriberId
+            ? { ...r, status: "completed", mediaToken, bundleUrl, bundleLabel }
+            : r,
+        ),
+      }));
     },
     uploadCoverFromPreview: async (mediaToken: string) => {
       try {

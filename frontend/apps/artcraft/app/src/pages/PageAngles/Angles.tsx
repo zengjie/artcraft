@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, CrosshairIcon, DownloadIcon, ImagesIcon } from "lucide-react";
 import { Button, GenerateButton } from "@storyteller/ui-button";
+import { FalCostTag } from "@storyteller/fal-proxy";
 import { GalleryItem, GalleryModal } from "@storyteller/ui-gallery-modal";
 import {
   MediaUploadApi,
@@ -727,6 +728,7 @@ export const Angles = () => {
                     variant="primary"
                     onClick={handleGenerate}
                     disabled={!sourceMediaToken}
+                    costLabel={selectedProvider === "fal_proxy" ? <FalCostTag model={(selectedModel as any)?.tauriId} count={1} /> : undefined}
                     credits={anglesCredits}
                     className="whitespace-nowrap px-5 py-1.5 text-sm"
                   >

@@ -30,19 +30,22 @@ try {
   await page.waitForTimeout(7000);
   await page.getByText('Create Image', { exact: true }).click();
   await page.waitForTimeout(3000);
-  await expect(page.getByText('fal · 按用量计费', { exact: true })).toBeVisible();
+  // The fal list-price tag replaces the credit readout for the preferred provider.
+  await expect(page.getByTestId('fal-cost')).toBeVisible();
+  await expect(page.getByTestId('fal-cost')).toContainText(/\$\d/);
   await expect(page.getByText(/^upgrade$/i)).toBeVisible();
   await page.getByPlaceholder('Describe what you want in the image...').fill('A red wooden boat');
   await page.locator('button.rounded-full.bg-primary').click();
   await expect.poll(() => page.evaluate(() => window.__PROXY_SUBMISSIONS__.length)).toBe(1);
   const [submission] = await page.evaluate(() => window.__PROXY_SUBMISSIONS__);
   assert.equal(submission.provider, 'fal_proxy');
-  assert.equal(submission.model, 'flux_1_schnell');
+  assert.equal(submission.model, 'nano_banana_pro', 'upstream default model, served by fal');
   assert.equal(submission.prompt, 'A red wooden boat');
-  assert.equal(submission.resolution, undefined);
+  assert.ok(submission.resolution === undefined || submission.resolution === 'one_k', String(submission.resolution));
   assert.equal(submission.quality, undefined);
   await page.screenshot({ path: '/tmp/artcraft-seamless-ui.png', fullPage: true });
   assert.equal(await page.locator('.fal-workspace').count(), 0);
   assert.deepEqual(errors, []);
-  console.log('PASS: original shell, official upgrade, preferred fal generation through existing image UI');
+  assert.equal(await page.getByText('按用量计费').count(), 0, 'no stray localized cost copy');
+  console.log('PASS: original shell, official upgrade, fal list price tag, preferred fal generation through existing image UI');
 } finally { await browser.close(); }

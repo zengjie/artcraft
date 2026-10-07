@@ -78,6 +78,13 @@ await run('audio', 'audio', { model: 'stable_audio', prompt: 'Gentle ambient pia
 await run('tripo-splat', 'splat', { model: 'tripo_splat', image_media_tokens: [image] }, .1);
 await run('world', 'world', { model: 'hunyuan_world', image_media_tokens: [image], labels_fg1: 'boat', labels_fg2: 'boat', classes: 'boat, background' }, .5);
 await run('video-prompt', 'text', { model: 'video_prompt', prompt: 'A toy boat floating peacefully on a pond' }, .02);
+// 2026-10-07 catalog extension. Cheap image/audio/mesh checks only; Kling 2.6 and
+// Veo 3.1 stay schema-verified because a single run costs $0.35–$3.20.
+await run('flux-dev', 'image', { model: 'flux_1_dev', prompt: 'A small red wooden toy boat on a plain light grey background, studio product photograph', image_batch_count: 1, aspect_ratio: 'square' }, .03);
+await run('seedream-4-text', 'image', { model: 'seedream_4', prompt: 'A small wooden toy boat on a white background', image_batch_count: 1 }, .04);
+await run('nano-2-edit', 'image', { model: 'nano_banana_2', prompt: 'Make the toy boat green. Preserve its shape.', image_media_tokens: [image], image_batch_count: 1, resolution: 'one_k' }, .09);
+await run('sfx', 'audio', { model: 'elevenlabs_sfx', prompt: 'Small wooden boat creaking gently on calm water', duration_seconds: 4 }, .03);
+await run('mesh-v3-image', 'mesh', { model: 'hunyuan_3d_3', image_media_tokens: [image], enable_texture: true }, .1);
 console.log(`Smoke finished. Reserved maximum planning budget: $${Object.values(ledger.runs).reduce((sum, e) => sum + e.reservedUSD, 0).toFixed(2)}. This is not a billing statement.`);
 
 function maskPng(size) {

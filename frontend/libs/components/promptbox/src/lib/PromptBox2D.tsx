@@ -3,6 +3,7 @@ import { useSignals } from "@preact/signals-react/runtime";
 import { PopoverMenu, PopoverItem } from "@storyteller/ui-popover";
 import { Tooltip } from "@storyteller/ui-tooltip";
 import { Button, GenerateButton } from "@storyteller/ui-button";
+import { FalCostTag } from "@storyteller/fal-proxy";
 import { Modal } from "@storyteller/ui-modal";
 import { ChevronDownIcon, ChevronUpIcon, FrameIcon, MaximizeIcon, RectangleHorizontalIcon, RectangleVerticalIcon, SquareIcon } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -525,7 +526,7 @@ export const PromptBox2D = ({
                 confirmClear={referenceImages.length > 0}
               />
               <GenerateButton
-                costLabel={selectedProvider === GenerationProvider.FalProxy ? "fal · 按用量计费" : undefined}
+                costLabel={selectedProvider === GenerationProvider.FalProxy ? <FalCostTag model={selectedImageModel?.tauriId} count={generationCount} aspect={aspectRatio} /> : undefined}
                 className="flex items-center border-none bg-white px-3 text-sm font-bold text-black hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50"
                 icon={undefined}
                 onClick={handleGenerate}

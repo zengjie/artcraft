@@ -5,6 +5,7 @@ import { toast } from "@storyteller/ui-toaster";
 import { PopoverMenu, PopoverItem } from "@storyteller/ui-popover";
 import { Tooltip } from "@storyteller/ui-tooltip";
 import { GenerateIconButton } from "@storyteller/ui-button";
+import { FalCostTag } from "@storyteller/fal-proxy";
 import { GenerateImage, GenerateImageRequest, commandErrorMessage } from "@storyteller/tauri-api";
 import { ChevronDownIcon, ChevronUpIcon, MaximizeIcon } from "lucide-react";
 import { DynamicIcon } from "@storyteller/icons";
@@ -580,7 +581,7 @@ export const PromptBoxImage = ({
                 confirmClear={referenceImages.length > 0}
               />
               <GenerateIconButton
-                costLabel={selectedProvider === GenerationProvider.FalProxy ? "fal · 按用量计费" : undefined}
+                costLabel={selectedProvider === GenerationProvider.FalProxy ? <FalCostTag model={selectedModel?.tauriId} count={generationCount} aspect={commonAspectRatio} /> : undefined}
                 onClick={handleEnqueue}
                 disabled={!prompt.trim()}
                 loading={isEnqueueing}

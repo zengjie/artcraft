@@ -61,7 +61,7 @@ export function installProxyApi() {
       if (method === "GET") return read(p + url.search);
       if (method === "DELETE" && p.startsWith("/v1/media_files/file/")) return proxyCall("delete_media", { token });
       if (method === "POST" && p.startsWith("/v1/media_files/rename/")) return proxyCall("rename_media", { token, body });
-      throw new Error("此 fal 素材暂不支持此操作");
+      throw new Error("This fal asset does not support that action yet");
     }
     if (method === "GET" && p === "/v1/media_files/batch") {
       const all = url.searchParams.getAll("tokens").flatMap(t => t.split(","));

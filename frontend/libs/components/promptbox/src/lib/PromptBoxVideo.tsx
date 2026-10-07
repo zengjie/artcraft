@@ -59,6 +59,7 @@ import {
 } from "./PromptFullscreenModal";
 import { PromptFullscreenButton } from "./PromptFullscreenButton";
 import { PromptClearAllButton } from "./PromptClearAllButton";
+import { FalCostTag, PromptDraftButton } from "@storyteller/fal-proxy";
 
 declare global {
   interface Window {
@@ -1558,6 +1559,13 @@ export const PromptBoxVideo = ({
                   handleCountChange={setGenerationCount}
                 />
               )}
+              {selectedProvider === GenerationProvider.FalProxy && (
+                <PromptDraftButton
+                  concept={prompt}
+                  imageToken={referenceImages[0]?.mediaToken}
+                  onDraft={setPrompt}
+                />
+              )}
               <PromptClearAllButton
                 onClick={handleClearAll}
                 disabled={!hasClearableContent}
@@ -1572,7 +1580,7 @@ export const PromptBoxVideo = ({
               >
                 <div>
                   <GenerateIconButton
-                costLabel={selectedProvider === GenerationProvider.FalProxy ? "fal · 按用量计费" : undefined}
+                costLabel={selectedProvider === GenerationProvider.FalProxy ? <FalCostTag model={selectedModel?.tauriId} seconds={effectiveDuration} count={effectiveGenerationCount} /> : undefined}
                     onClick={handleEnqueue}
                     disabled={!prompt.trim()}
                     loading={isEnqueueing}

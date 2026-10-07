@@ -7,6 +7,7 @@ import {
 import { PopoverMenu, PopoverItem } from "@storyteller/ui-popover";
 import { Tooltip } from "@storyteller/ui-tooltip";
 import { GenerateIconButton, ToggleButton } from "@storyteller/ui-button";
+import { FalCostTag, isProxyModel } from "@storyteller/fal-proxy";
 import { ChevronDownIcon, ChevronUpIcon, MicIcon, MicOffIcon, RepeatIcon } from "lucide-react";
 import { DynamicIcon } from "@storyteller/icons";
 import type { OmniGenAudioModelDetails, OmniGenAudioRequest, OmniGenAudioGenerateResponse, UploadMediaFn } from "@storyteller/api";
@@ -141,7 +142,7 @@ export const PromptBoxAudio = ({
       if (chosen) return chosen;
     }
     return (
-      models.find((m) => m.model === "stable_audio") ?? models.find((m) => m.model === DEFAULT_AUDIO_MODEL_ID) ?? models[0]
+      models.find((m) => isProxyModel(m.model, "audio")) ?? models.find((m) => m.model === DEFAULT_AUDIO_MODEL_ID) ?? models[0]
     );
   }, [models, selectedModelId]);
 
@@ -604,7 +605,7 @@ export const PromptBoxAudio = ({
                 confirmClear={hasAttachedRefs}
               />
               <GenerateIconButton
-                costLabel={selectedModel?.model === "stable_audio" ? "fal · 按用量计费" : undefined}
+                costLabel={isProxyModel(selectedModel?.model, "audio") ? <FalCostTag model={selectedModel?.model} /> : undefined}
                 onClick={handleEnqueue}
                 disabled={!prompt.trim() || missingRequiredAudioRef}
                 loading={isEnqueueing}

@@ -1,14 +1,14 @@
-import { extendProxy3DItems } from "@storyteller/fal-proxy";
+import { FalCostTag, WORLD_PAGE_COPY, extendProxy3DItems, proxyCall, proxyMediaUrl, runProxyJob } from "@storyteller/fal-proxy";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { animated, useSpring } from "@react-spring/web";
 import { Button, GenerateButton } from "@storyteller/ui-button";
 import { TabSelector } from "@storyteller/ui-tab-selector";
 import { Tooltip } from "@storyteller/ui-tooltip";
 import { Viewer3D } from "@storyteller/ui-viewer-3d";
-import { BoxIcon, ImagesIcon, PlusIcon, UploadIcon, XIcon } from "lucide-react";
+import { BoxIcon, DownloadIcon, FileArchiveIcon, ImagesIcon, PlusIcon, UploadIcon, XIcon } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { useImageTo3DStore } from "../../pages/PageImageTo3DObject/ImageTo3DStore";
-import { useImageTo3DWorldStore } from "../../pages/PageImageTo3DWorld/ImageTo3DWorldStore";
+import { useImageTo3DWorldStore, type ImageTo3DWorldResult } from "../../pages/PageImageTo3DWorld/ImageTo3DWorldStore";
 import { MediaUploadApi } from "@storyteller/api";
 import { GalleryItem, GalleryModal } from "@storyteller/ui-gallery-modal";
 import {
@@ -94,6 +94,12 @@ export const ImageTo3DExperience = ({
     WORLD_MODEL_PAGE,
     selectedWorldModel?.id,
   );
+  // fal world models return different artifacts than World Labs; the page
+  // copy, the generate action and the result view follow the selection.
+  const falWorldModel = selectedWorldProvider === "fal_proxy" ? selectedWorldModel?.tauriId : undefined;
+  const falWorldCopy = falWorldModel ? WORLD_PAGE_COPY[falWorldModel] : undefined;
+  const isHunyuanWorld = falWorldModel === "hunyuan_world";
+  const [worldLabels, setWorldLabels] = useState({ fg1: "", fg2: "", classes: "" });
   const selectedObjectModel = useSelectedModel(OBJECT_MODEL_PAGE);
   const selectedObjectProvider = useSelectedProviderForModel(OBJECT_MODEL_PAGE, selectedObjectModel?.id);
   useEffect(() => { setActiveMode(selectedObjectModel?.tauriId === "hunyuan_3d_v3_text" ? "text" : "image"); }, [selectedObjectModel?.tauriId]);
@@ -135,6 +141,7 @@ export const ImageTo3DExperience = ({
   const worldResults = useImageTo3DWorldStore((s) => s.results);
   const worldStartGeneration = useImageTo3DWorldStore((s) => s.startGeneration);
   const worldFailGeneration = useImageTo3DWorldStore((s) => s.failGeneration);
+  const worldCompleteBundle = useImageTo3DWorldStore((s) => s.completeBundle);
   const worldReset = useImageTo3DWorldStore((s) => s.reset);
   const pendingExternalImage = useImageTo3DWorldStore(
     (s) => s.pendingExternalImage,
@@ -382,6 +389,38 @@ export const ImageTo3DExperience = ({
     setUploadedMediaToken(item.id);
   };
 
+  // Hunyuan World runs outside the native task queue: the Proxy owns the job
+  // and the result is a ZIP, so the page polls it and offers a download.
+  const ensureProxyImage = async (img: WorldImage): Promise<string> => {
+    if (img.mediaToken!.startsWith("mf_fpx_")) return img.mediaToken!;
+    const blob = await (await fetch(img.preview)).blob();
+    const result = await proxyCall<{ media_file_token: string }>("upload", {
+      bytes: Array.from(new Uint8Array(await blob.arrayBuffer())),
+      mime: blob.type || "image/png",
+    });
+    return result.media_file_token;
+  };
+
+  const runWorldBundle = async (subscriberId: string, imageToken: string) => {
+    try {
+      const job = await runProxyJob("world", {
+        model: "hunyuan_world",
+        image_media_tokens: [imageToken],
+        labels_fg1: worldLabels.fg1.trim(),
+        labels_fg2: worldLabels.fg2.trim(),
+        classes: worldLabels.classes.trim(),
+      });
+      const token = job.maybe_result?.entity_token;
+      if (!token) throw new Error("fal returned no world bundle");
+      const url = await proxyMediaUrl(token);
+      worldCompleteBundle(subscriberId, url, token, "Hunyuan World bundle");
+      toast.success("World bundle is ready to download");
+    } catch (error) {
+      worldFailGeneration(subscriberId);
+      toast.error((error as Error).message || "World bundle generation failed");
+    }
+  };
+
   const handleGenerate = async () => {
     if (isGenerating) return;
 
@@ -424,14 +463,20 @@ export const ImageTo3DExperience = ({
           timestamp: Date.now(),
         });
 
-        await GenerateSplat({
-          reference_image_media_tokens: readyTokens,
-          prompt: worldPrompt.trim() || undefined,
-          model: (selectedWorldModel ?? SPLAT_MODELS[0]).tauriId,
-          provider: selectedWorldProvider,
-          frontend_caller: "mini_app",
-          frontend_subscriber_id: subscriberId,
-        });
+        if (isHunyuanWorld) {
+          const source = worldImages.find((img) => img.mediaToken && !img.isUploading)!;
+          const imageToken = await ensureProxyImage(source);
+          void runWorldBundle(subscriberId, imageToken);
+        } else {
+          await GenerateSplat({
+            reference_image_media_tokens: readyTokens,
+            prompt: worldPrompt.trim() || undefined,
+            model: (selectedWorldModel ?? SPLAT_MODELS[0]).tauriId,
+            provider: selectedWorldProvider,
+            frontend_caller: "mini_app",
+            frontend_subscriber_id: subscriberId,
+          });
+        }
 
       } else {
         const snapshotPrompt = prompt.trim();
@@ -488,7 +533,13 @@ export const ImageTo3DExperience = ({
   const canGenerate = useMemo(() => {
     if (isGenerating) return false;
     if (variant === "world") {
-      return worldImages.some((img) => img.mediaToken && !img.isUploading);
+      const ready = worldImages.filter((img) => img.mediaToken && !img.isUploading);
+      // fal world models take exactly one image; Hunyuan World also needs its layer labels.
+      if (falWorldModel) {
+        if (ready.length !== 1 || worldImages.some((img) => img.isUploading)) return false;
+        return !isHunyuanWorld || Object.values(worldLabels).every((value) => value.trim().length > 0);
+      }
+      return ready.length > 0;
     }
     if (isUploading) return false;
     if (activeMode === "image") {
@@ -499,6 +550,9 @@ export const ImageTo3DExperience = ({
     }
     return true;
   }, [
+    falWorldModel,
+    isHunyuanWorld,
+    worldLabels,
     variant,
     activeMode,
     uploadedMediaToken,
@@ -662,6 +716,60 @@ export const ImageTo3DExperience = ({
     </div>
   );
 
+  const renderWorldLabels = () => (
+    <div className="grid grid-cols-2 gap-x-3 gap-y-2.5">
+      {(
+        [
+          { key: "fg1", label: "Foreground layer 1", placeholder: "e.g. stone lantern, pine tree" },
+          { key: "fg2", label: "Foreground layer 2", placeholder: "e.g. wooden bridge" },
+          { key: "classes", label: "Scene type", placeholder: "e.g. outdoor garden" },
+        ] as const
+      ).map(({ key, label, placeholder }) => (
+        <label key={key} className={twMerge("flex flex-col gap-1", key === "classes" && "col-span-2")}>
+          <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-base-fg/55">
+            {label}
+          </span>
+          <input
+            type="text"
+            value={worldLabels[key]}
+            placeholder={placeholder}
+            onChange={(e) => setWorldLabels((prev) => ({ ...prev, [key]: e.target.value }))}
+            className="w-full rounded-[3px] border border-white/15 bg-ui-controls px-3 py-2 text-sm text-base-fg placeholder-base-fg/45 transition-colors focus:border-white/60 focus:outline-none"
+          />
+        </label>
+      ))}
+      <p className="col-span-2 text-xs leading-relaxed text-base-fg/55">
+        Name the layers to separate. The result is a ZIP of scene layers, not an explorable World Labs world.
+      </p>
+    </div>
+  );
+
+  const renderBundleCard = (result: ImageTo3DWorldResult) => (
+    <div className="flex h-full flex-col items-center justify-center gap-6 p-8 text-center">
+      {result.previewUrl && (
+        <img src={result.previewUrl} alt="" className="max-h-56 border border-white/10 object-contain" />
+      )}
+      <div className="flex flex-col items-center gap-1.5">
+        <FileArchiveIcon className="mb-1 h-7 w-7 text-base-fg/70" />
+        <h3 className="font-display text-xl tracking-tight text-base-fg">{result.bundleLabel ?? "World bundle"}</h3>
+        <p className="max-w-md text-sm leading-relaxed text-base-fg/60">{WORLD_PAGE_COPY.hunyuan_world.note}</p>
+      </div>
+      <Button
+        variant="primary"
+        icon={DownloadIcon}
+        onClick={() =>
+          toast.promise(downloadFileFromUrl(result.bundleUrl!), {
+            loading: "Downloading ZIP...",
+            success: "Downloaded world bundle",
+            error: "Failed to download file",
+          })
+        }
+      >
+        Download ZIP
+      </Button>
+    </div>
+  );
+
   const renderWorldMode = () => {
     const canAddMore = worldImages.length < MAX_WORLD_IMAGES;
     const hasImages = worldImages.length > 0;
@@ -746,15 +854,20 @@ export const ImageTo3DExperience = ({
               </div>
             </Tooltip>
           </div>
-          <textarea
-            ref={worldTextareaRef}
-            rows={2}
-            className="w-full resize-none overflow-y-auto rounded-[3px] border border-white/15 bg-ui-controls px-3 py-2.5 text-base text-base-fg placeholder-base-fg/60 transition-colors focus:border-white/60 focus:outline-none"
-            style={{ maxHeight: "5em" }}
-            value={worldPrompt}
-            placeholder="Describe your 3D world (optional)..."
-            onChange={(e) => setWorldPrompt(e.target.value)}
-          />
+          {isHunyuanWorld ? renderWorldLabels() : (
+            <textarea
+              ref={worldTextareaRef}
+              rows={2}
+              className="w-full resize-none overflow-y-auto rounded-[3px] border border-white/15 bg-ui-controls px-3 py-2.5 text-base text-base-fg placeholder-base-fg/60 transition-colors focus:border-white/60 focus:outline-none"
+              style={{ maxHeight: "5em" }}
+              value={worldPrompt}
+              placeholder="Describe your 3D world (optional)..."
+              onChange={(e) => setWorldPrompt(e.target.value)}
+            />
+          )}
+          {falWorldCopy && !isHunyuanWorld && (
+            <p className="text-xs leading-relaxed text-base-fg/55">{falWorldCopy.note} Add exactly one image.</p>
+          )}
         </div>
       );
     }
@@ -871,14 +984,16 @@ export const ImageTo3DExperience = ({
               {worldImages.map(worldImageThumbnail)}
               {addButton}
             </div>
-            <textarea
-              ref={worldTextareaRef}
-              rows={1}
-              className="flex-1 resize-none overflow-y-auto rounded-[3px] border border-white/15 bg-ui-controls px-3 py-2 text-sm text-base-fg placeholder-base-fg/60 transition-colors focus:border-white/60 focus:outline-none"
-              value={worldPrompt}
-              placeholder="Describe world (optional)..."
-              onChange={(e) => setWorldPrompt(e.target.value)}
-            />
+            {isHunyuanWorld ? <div className="flex-1">{renderWorldLabels()}</div> : (
+              <textarea
+                ref={worldTextareaRef}
+                rows={1}
+                className="flex-1 resize-none overflow-y-auto rounded-[3px] border border-white/15 bg-ui-controls px-3 py-2 text-sm text-base-fg placeholder-base-fg/60 transition-colors focus:border-white/60 focus:outline-none"
+                value={worldPrompt}
+                placeholder="Describe world (optional)..."
+                onChange={(e) => setWorldPrompt(e.target.value)}
+              />
+            )}
           </div>
           {imageCountRow}
         </div>
@@ -893,15 +1008,20 @@ export const ImageTo3DExperience = ({
           {addButton}
         </div>
         {imageCountRow}
-        <textarea
-          ref={worldTextareaRef}
-          rows={2}
-          className="w-full resize-none overflow-y-auto rounded-[3px] border border-white/15 bg-ui-controls px-3 py-2.5 text-base text-base-fg placeholder-base-fg/60 transition-colors focus:border-white/60 focus:outline-none"
-          style={{ maxHeight: "5em" }}
-          value={worldPrompt}
-          placeholder="Describe your 3D world (optional)..."
-          onChange={(e) => setWorldPrompt(e.target.value)}
-        />
+        {isHunyuanWorld ? renderWorldLabels() : (
+          <textarea
+            ref={worldTextareaRef}
+            rows={2}
+            className="w-full resize-none overflow-y-auto rounded-[3px] border border-white/15 bg-ui-controls px-3 py-2.5 text-base text-base-fg placeholder-base-fg/60 transition-colors focus:border-white/60 focus:outline-none"
+            style={{ maxHeight: "5em" }}
+            value={worldPrompt}
+            placeholder="Describe your 3D world (optional)..."
+            onChange={(e) => setWorldPrompt(e.target.value)}
+          />
+        )}
+        {falWorldCopy && !isHunyuanWorld && (
+          <p className="text-xs leading-relaxed text-base-fg/55">{falWorldCopy.note} Add exactly one image.</p>
+        )}
       </div>
     );
   };
@@ -914,6 +1034,10 @@ export const ImageTo3DExperience = ({
 
   const activeResult =
     results.find((r) => r.id === selectedResultId) || results[0];
+  const activeBundle =
+    variant === "world" && (activeResult as ImageTo3DWorldResult | undefined)?.bundleUrl
+      ? (activeResult as ImageTo3DWorldResult)
+      : undefined;
 
   return (
     <div className="flex h-[calc(100vh-56px)] w-full bg-ui-background text-base-fg">
@@ -937,10 +1061,14 @@ export const ImageTo3DExperience = ({
 
       <div className="relative z-10 h-full w-full p-8">
         {!hasResults && (
-          <div className="pointer-events-none absolute left-0 top-[calc(50%-280px)] flex w-full justify-center">
+          <div
+            className="pointer-events-none absolute left-0 flex w-full justify-center"
+            // Keep the title clear of the input panel when a provider form makes it taller.
+            style={{ top: `calc(50% - ${Math.max(280, promptHeight / 2 + 150)}px)` }}
+          >
             <CreateEmptyState
               title={title}
-              subtitle={subtitle}
+              subtitle={falWorldCopy?.subtitle ?? subtitle}
               className="py-8 sm:py-8"
             />
           </div>
@@ -957,13 +1085,17 @@ export const ImageTo3DExperience = ({
           >
             {/* Left: Viewer */}
             <div className="relative h-full overflow-hidden border border-ui-panel-border bg-ui-panel">
-              <Viewer3D
-                key={activeResult?.id}
-                modelUrl={activeResult?.modelUrl}
-                previewUrl={activeResult?.previewUrl}
-                isActive={true}
-                className="h-full"
-              />
+              {activeBundle ? (
+                renderBundleCard(activeBundle)
+              ) : (
+                <Viewer3D
+                  key={activeResult?.id}
+                  modelUrl={activeResult?.modelUrl}
+                  previewUrl={activeResult?.previewUrl}
+                  isActive={true}
+                  className="h-full"
+                />
+              )}
               {activeResult?.modelUrl && activeResult?.mediaToken && (
                 <div className="absolute right-4 top-4 z-10 flex gap-2">
                   <Button
@@ -1133,7 +1265,11 @@ export const ImageTo3DExperience = ({
                   }
                 />
                 <GenerateButton
-                  costLabel={(variant === "world" ? selectedWorldProvider : selectedObjectProvider) === "fal_proxy" ? "fal · 按用量计费" : undefined}
+                  costLabel={
+                    (variant === "world" ? selectedWorldProvider : selectedObjectProvider) === "fal_proxy" ? (
+                      <FalCostTag model={(variant === "world" ? selectedWorldModel : selectedObjectModel)?.tauriId} count={1} />
+                    ) : undefined
+                  }
                   variant="primary"
                   icon={undefined}
                   disabled={!canGenerate}
@@ -1141,7 +1277,7 @@ export const ImageTo3DExperience = ({
                   loading={isGenerating}
                   credits={variant === "world" ? worldCredits : objectCredits}
                 >
-                  {`Generate ${variant === "object" ? "Object" : "World"}`}
+                  {variant === "object" ? "Generate Object" : falWorldCopy?.action ?? "Generate World"}
                 </GenerateButton>
               </div>
             </div>

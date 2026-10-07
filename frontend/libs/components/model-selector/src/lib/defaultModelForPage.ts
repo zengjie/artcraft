@@ -16,11 +16,32 @@ const DEFAULT_MODEL_ID_FOR_PAGE: Partial<Record<ModelPage, string>> = {
   [ModelPage.Angles]: "flux_2_lora_angles",
 };
 
+// When the team fal account serves a page, start from these models: the
+// upstream default where fal carries it, otherwise the cheapest capable fal
+// model. Explicit user choices still win over this table.
+const FAL_DEFAULT_MODEL_ID_FOR_PAGE: Partial<Record<ModelPage, string>> = {
+  [ModelPage.TextToImage]: "nano_banana_pro",
+  [ModelPage.ImageToVideo]: "kling_2p5_turbo_pro",
+  [ModelPage.Canvas2D]: "nano_banana",
+  [ModelPage.Stage3D]: "nano_banana",
+  [ModelPage.ImageEditor]: "nano_banana_pro",
+  [ModelPage.ImageTo3DWorld]: "tripo_splat",
+  [ModelPage.ImageTo3DObject]: "hunyuan_3d_3",
+  [ModelPage.Angles]: "qwen_edit_2511_angles",
+  [ModelPage.BackgroundRemoval]: "fal_birefnet",
+};
+
+const servedByFal = (model: Model): boolean =>
+  model.getPreferredProvider() === "fal_proxy" || model.getProviders()[0] === "fal_proxy";
+
 export const defaultModelForPage = (
   models: Model[],
   page: ModelPage,
 ): Model => {
-  const preferred = models.find(model => model.getPreferredProvider() || model.getProviders()[0] === "fal_proxy");
+  const falId = FAL_DEFAULT_MODEL_ID_FOR_PAGE[page];
+  const falDefault = models.find((m) => (m.id === falId || m.tauriId === falId) && servedByFal(m));
+  if (falDefault) return falDefault;
+  const preferred = models.find(servedByFal);
   if (preferred) return preferred;
   const defaultId = DEFAULT_MODEL_ID_FOR_PAGE[page];
 

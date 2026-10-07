@@ -4,6 +4,7 @@ import { CameraIcon, ChevronDownIcon, ChevronUpIcon, DownloadIcon, Grid2x2Icon, 
 import { DynamicIcon } from "@storyteller/icons";
 import { PopoverItem, PopoverMenu } from "@storyteller/ui-popover";
 import { Button, ToggleButton, GenerateButton } from "@storyteller/ui-button";
+import { FalCostTag } from "@storyteller/fal-proxy";
 import { ButtonIconSelect } from "@storyteller/ui-button-icon-select";
 import { Tooltip } from "@storyteller/ui-tooltip";
 import {
@@ -886,7 +887,7 @@ export const PromptBox3D = ({
                 Save frame
               </Button>
               <GenerateButton
-                costLabel={selectedProvider === GenerationProvider.FalProxy ? "fal · 按用量计费" : undefined}
+                costLabel={selectedProvider === GenerationProvider.FalProxy ? <FalCostTag model={selectedImageModel?.tauriId} count={1} /> : undefined}
                 className="flex items-center border-none bg-white px-3 text-sm font-bold text-black hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50"
                 icon={undefined}
                 onClick={handleEnqueue}
