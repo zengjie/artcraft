@@ -21,6 +21,7 @@ fal 元素沿用 ArtCraft 的粗野主义体系，不引入新色与新字体。
 - 3D 世界页：选中 TripoSplat 或 Hunyuan World 时副标题、按钮文案与说明随之变化，明示产物是物体 PLY 或 ZIP 包，不冒充 World Labs 世界。Hunyuan World 需要填写两层前景与场景类型，结果以可下载卡片呈现。
 - 未授权错误：ArtCraft 模式下未登录时生成失败不再显示原始 JSON，而是说明需要登录 ArtCraft 并打开登录弹窗；fal 模式下提示重新用飞书连接。两种模式都不会自动改走另一服务。
 - 全量 fal 目录快照见 `docs/research/fal-model-catalog-2026-10-07.md`（1459 个活跃端点，按类别列出，已接入端点有标注）。
+- 画布蒙版：选中的模型不支持蒙版时，蒙版工具不再置灰并提示 "Model unsupported"，而是切换到本页第一个支持蒙版的模型（FAL 模式为 Flux Pro (Inpainting)，即 FLUX Fill Pro）并提示已切换；没有可用模型时才回退到选择工具。
 - 视频提示框：fal 服务商下提供 "Draft prompt" 按钮，用 fal 视频提示词生成器把短想法扩写为完整提示词，可一键撤销。
 
 ## 模块与维护边界
