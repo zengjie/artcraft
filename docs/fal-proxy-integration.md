@@ -43,13 +43,13 @@ Nano Banana 编辑器系统提示词采用固定的画布/3D 场景上下文前�
 
 ## 验收记录
 
-2026-10-07 目录扩展后新增 5 项真实验收，全部成功并核对文件头：FLUX.1 Dev（JPEG）、Seedream 4 文生图（JPEG）、Nano Banana 2 图像编辑（PNG）、ElevenLabs 音效（MP3）、Hunyuan 3D V3 图生网格（GLB）。累计 API 预留 US$12.33，加桌面 Nano 单张 US$0.10 共 US$12.43。Kling 2.6 Pro、Veo 3.1、Veo 3.1 Fast、Seedream 4.5、Nano Banana Pro 仅完成 fal schema 与参数映射单元测试，未付费真实验收；Veo 单次 4 到 8 秒的列价为 US$0.60 到 US$3.20，默认不选中。
+2026-10-07 目录扩展后新增 5 项真实验收，全部成功并核对文件头：FLUX.1 Dev（JPEG）、Seedream 4 文生图（JPEG）、Nano Banana 2 图像编辑（PNG）、ElevenLabs 音效（MP3）、Hunyuan 3D V3 图生网格（GLB）。累计 API 预留 US$12.33，加桌面 Nano 单张 US$0.10、浏览器链路 Draft prompt US$0.01 与 Hunyuan World US$0.30，共 US$12.74。Kling 2.6 Pro、Veo 3.1、Veo 3.1 Fast、Seedream 4.5、Nano Banana Pro 仅完成 fal schema 与参数映射单元测试，未付费真实验收；Veo 单次 4 到 8 秒的列价为 US$0.60 到 US$3.20，默认不选中。
 
 此前真实 fal API 验收 14/14 成功：FLUX 文生图、Nano 文生图/图像编辑、Qwen 角度、Fill 蒙版、Kling 文生/图生视频、Hunyuan 图生/文生网格、背景移除、音频、TripoSplat、Hunyuan World、视频提示词。13 个文件输出读取成功并核对 JPEG/PNG/MP4/GLB/WAV/PLY/ZIP 文件头，另一个返回文本。
 
 付费测试的保守预算预留为 US$12.04，另为桌面 Nano 单张测试预留 US$0.10，总预留 US$12.14（截至首轮；最新累计见上文），低于用户授权 US$20。**预留不是实际账单**；没有读取最终账单，不能宣称精确实际费用或服务端已有美元硬限额。测试账本位于本机 `/tmp/artcraft-fal-live/`，不提交含素材链接和个人标识的日志。
 
-已验证的模拟界面行为（Playwright 加浏览器夹具，`frontend/tools/testing/fal-proxy-seamless.mjs` 与截图审查）：图片、视频、音频、3D 物体、3D 世界、角度页的 fal 列价标签与费用面板、Nano Banana 与 Veo 家族中的 fal 服务商芯片、Hunyuan World 标签表单、视频页 Draft prompt 按钮、账户区块。Hunyuan World 真实 ZIP 下载与 Draft prompt 真实填入尚未在桌面端逐项验收，仅 Proxy API 已通过。
+已验证的模拟界面行为（Playwright 加浏览器夹具，`frontend/tools/testing/fal-proxy-seamless.mjs` 与截图审查）：图片、视频、音频、3D 物体、3D 世界、角度页的 fal 列价标签与费用面板、Nano Banana 与 Veo 家族中的 fal 服务商芯片、Hunyuan World 标签表单、视频页 Draft prompt 按钮、账户区块。Draft prompt 与 Hunyuan World 已用真实 Proxy 与真实 fal 走完前端链路：Chrome 加载生产构建，Tauri IPC 由镜像原生白名单的桥接替代，直连本机 Proxy。视频页短想法经 Draft prompt 扩写为 405 字提示词并可撤销；3D 世界页上传单图、填写两层前景与场景类型后生成 Hunyuan World，约 10 分钟后出现下载卡片，ZIP 为 78 MB 且文件头校验为 PK。该链路覆盖前端与 Proxy，不覆盖 Rust 原生层与系统下载对话框；终端无屏幕录制权限，未直接操控 Tauri 窗口。
 
 已验证的桌面行为：原版首页和商业入口、统一图片页优先 fal、Nano 同一选择器切换 ArtCraft/fal、真实单张生成后进入原版历史、将结果送入原版视频首帧。独立模拟 UI 测试 `frontend/tools/testing/fal-proxy-seamless.mjs` 验证原版入口及 fal 原生请求参数。所有复杂编辑器、全模型官方真实付费生成和所有桌面世界流程**尚未逐项端到端验证**，API 成功不替代这些验收。
 
@@ -70,7 +70,7 @@ SQLX_OFFLINE=true cargo check -p artcraft --no-default-features --offline
 ./script/artcraft/build_fal_proxy_macos.sh
 ```
 
-本地包关闭官方 updater，使用独立 bundle identifier，避免被官方更新覆盖扩展。它是本机调试包，未做 Developer ID 公证，不作为正式企业分发成品。
+最新本机 DMG 为 `../dist/ArtCraft-fal-Local-0.41.0-fal-pricing.dmg`（含 sha256）。本地包关闭官方 updater，使用独立 bundle identifier，避免被官方更新覆盖扩展。它是本机调试包，未做 Developer ID 公证，不作为正式企业分发成品。
 
 ## 跟进上游
 
